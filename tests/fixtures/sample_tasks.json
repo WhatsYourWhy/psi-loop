@@ -1,0 +1,30 @@
+{
+  "tasks": [
+    {
+      "id": "retry_backoff",
+      "goal": "Design Python API client retry logic with exponential backoff and jitter for rate limits and transient failures.",
+      "current_context": [
+        "The current client already uses Python API client retry logic for rate limits and transient failures with fixed delay.",
+        "Avoid selecting another note that just repeats the same fixed-delay guidance."
+      ],
+      "max_tokens": 12,
+      "candidates": [
+        {
+          "id": "redundant_fixed_delay",
+          "source": "legacy-notes",
+          "text": "Design Python API client retry logic for rate limits and transient failures with fixed delay."
+        },
+        {
+          "id": "novel_backoff_jitter",
+          "source": "best-practice",
+          "text": "Exponential backoff with jitter helps Python clients survive 429 rate limits and transient failures."
+        },
+        {
+          "id": "request_logging",
+          "source": "operations",
+          "text": "API clients should log request IDs for traceability."
+        }
+      ]
+    }
+  ]
+}
