@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+from importlib import resources
 from pathlib import Path
 from typing import Any
 
@@ -17,21 +18,34 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--fixture",
         type=Path,
-        required=True,
         help="Path to a JSON fixture file containing task definitions.",
     )
     parser.add_argument(
         "--task",
         help="Task id to run. Defaults to the first task in the fixture.",
     )
+    parser.add_argument(
+        "--list-tasks",
+        action="store_true",
+        help="List tasks in the selected fixture and exit.",
+    )
     return parser
 
 
-def _load_tasks(path: Path) -> list[dict[str, Any]]:
-    payload = json.loads(path.read_text(encoding="utf-8"))
+def _default_fixture_text() -> str:
+    bundled_fixture = resources.files("psi_loop").joinpath("data/sample_tasks.json")
+    return bundled_fixture.read_text(encoding="utf-8")
+
+
+def _load_tasks(path: Path | None) -> list[dict[str, Any]]:
+    if path is None:
+        payload = json.loads(_default_fixture_text())
+    else:
+        payload = json.loads(path.read_text(encoding="utf-8"))
     tasks = payload.get("tasks", [])
     if not tasks:
-        raise ValueError(f"No tasks were found in fixture: {path}")
+        fixture_label = str(path) if path is not None else "bundled sample fixture"
+        raise ValueError(f"No tasks were found in fixture: {fixture_label}")
     return tasks
 
 
@@ -75,6 +89,11 @@ def main() -> int:
     args = parser.parse_args()
 
     tasks = _load_tasks(args.fixture)
+    if args.list_tasks:
+        for task in tasks:
+            print(task["id"])
+        return 0
+
     task = _pick_task(tasks, args.task)
     candidates = _to_candidates(task["candidates"])
 

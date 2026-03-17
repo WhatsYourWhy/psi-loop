@@ -1,8 +1,18 @@
 # psi-loop
 
-`psi-loop` is a minimal Python prototype for goal-conditioned context selection. It implements the `Psi0` ranking idea from `Minimal Context Manager v0.md` and the MVP guidance in `AI Optimal Synthesis — Architecture Brief.md`: rank candidate context by value relative to the goal and surprise relative to the current context, then select the best items under a budget.
+`psi-loop` is a small Python prototype for goal-conditioned context selection. Instead of ranking context by similarity alone, it ranks candidates by two signals: how relevant they are to the goal, and how novel they are relative to what is already in context. The result is a minimal, testable implementation of `Psi0`: prefer context that is both useful and non-redundant.
 
-This first release is intentionally narrow. It ships a library, a small CLI, fixture-driven tests, and a similarity-only baseline so the ranking signal can be evaluated locally before building the larger agent runtime described in the research docs.
+This first release is intentionally narrow. It ships a library, a CLI, fixture-driven tests, and a similarity-only baseline so the ranking thesis can be evaluated locally before building the larger agent runtime described in the research documents.
+
+## Why It Exists
+
+Standard retrieval tends to return whatever looks semantically similar to the goal, even when that context is repetitive or stale. `psi-loop` explores a different ranking rule:
+
+- `V`: value relative to the goal
+- `H`: surprise relative to the current context
+- `Psi0 = H * V`
+
+The goal of this repo is not to ship a full agent system yet. The goal is to prove that this ranking rule is worth keeping.
 
 ## MVP Scope
 
@@ -28,15 +38,27 @@ python -m pip install --upgrade pip
 python -m pip install -e .[dev]
 ```
 
-Run the sample task:
+List the bundled sample tasks:
 
-```bash
-python -m psi_loop.cli --fixture tests/fixtures/sample_tasks.json --task retry_backoff
+```powershell
+psi-loop --list-tasks
+```
+
+Run the bundled demo task:
+
+```powershell
+psi-loop --task retry_backoff
+```
+
+You can still point the CLI at your own fixture file:
+
+```powershell
+psi-loop --fixture tests/fixtures/sample_tasks.json --task retry_backoff
 ```
 
 Run the test suite:
 
-```bash
+```powershell
 pytest
 ```
 
@@ -49,13 +71,33 @@ pytest
 
 The package ranks candidates by `H * V`, then fits the result into a shared token budget. A similarity-only baseline is included for comparison so fixtures can demonstrate where goal-conditioned salience beats naive retrieval.
 
+In the bundled example, the baseline prefers a note that repeats the existing fixed-delay retry policy, while `Psi0` prefers the more novel note about exponential backoff with jitter.
+
+## Best Way To Test It
+
+If you want to evaluate whether the project is doing anything useful yet, use this sequence:
+
+1. Run `psi-loop --list-tasks` to confirm the bundled demo data is available.
+2. Run `psi-loop --task retry_backoff` and compare the `Psi0` selection against the baseline.
+3. Open `src/psi_loop/data/sample_tasks.json` and change the goal, current context, or candidates to see how ranking changes.
+4. Run `pytest` to make sure your changes did not break the existing behavior.
+
+The fastest way to learn the system is to tweak the fixture and rerun the CLI. That gives you immediate feedback on whether the ranking rule is behaving intuitively.
+
 ## Repo Layout
 
 - `src/psi_loop/scoring.py`: scoring primitives for `V`, `H`, and `Psi0`
 - `src/psi_loop/pipeline.py`: ranking and budgeted selection
 - `src/psi_loop/baseline.py`: similarity-only comparison path
 - `src/psi_loop/cli.py`: fixture runner for local experiments
+- `src/psi_loop/data/sample_tasks.json`: bundled demo data for first-run testing
 - `tests/`: scoring, pipeline, and fixture-based regression tests
+
+## Current Limits
+
+- Tokenization and stemming are intentionally simple heuristics.
+- Surprise is approximated with bag-of-words distance, not embeddings.
+- The bundled fixture proves the concept on one narrow scenario, not a benchmark suite.
 
 ## Next Steps
 
