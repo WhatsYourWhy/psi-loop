@@ -2,10 +2,14 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Sequence
+from collections.abc import Callable, Iterable, Sequence
 
-from psi_loop.models import Candidate, ScoredCandidate, SelectionResult
+from psi_loop.embedders import Embedder
+from psi_loop.models import Candidate, ScoredCandidate, SelectionResult, SourceRequest
+from psi_loop.sources import CandidateSource
 from psi_loop.scoring import psi_0, tokenize
+
+CandidateScorer = Callable[[str, str, Iterable[str], Embedder | None], tuple[float, float, float]]
 
 
 def _token_count(text: str) -> int:
@@ -16,12 +20,19 @@ def rank_candidates(
     candidates: Sequence[Candidate],
     goal: str,
     current_context: Iterable[str],
+    scorer: CandidateScorer = psi_0,
+    embedder: Embedder | None = None,
 ) -> list[ScoredCandidate]:
     """Rank candidates with Psi0 and preserve useful scoring detail."""
 
     ranked: list[ScoredCandidate] = []
     for candidate in candidates:
-        score, value, surprise = psi_0(candidate.text, goal, current_context)
+        score, value, surprise = scorer(
+            candidate.text,
+            goal,
+            current_context,
+            embedder,
+        )
         ranked.append(
             ScoredCandidate(
                 candidate=candidate,
@@ -58,9 +69,83 @@ def select_context(
     goal: str,
     current_context: Iterable[str],
     max_tokens: int,
+    embedder: Embedder | None = None,
 ) -> SelectionResult:
     """Rank and select candidates under a shared token budget."""
 
-    ranked = rank_candidates(candidates, goal, current_context)
+    ranked = rank_candidates(
+        candidates,
+        goal,
+        current_context,
+        scorer=psi_0,
+        embedder=embedder,
+    )
     selected = fit_to_budget(ranked, max_tokens)
     return SelectionResult(ranked=ranked, selected=selected, max_tokens=max_tokens)
+
+
+def select_with_scorer(
+    candidates: Sequence[Candidate],
+    goal: str,
+    current_context: Iterable[str],
+    max_tokens: int,
+    scorer: CandidateScorer,
+    embedder: Embedder | None = None,
+) -> SelectionResult:
+    """Shared selection entrypoint for pluggable scoring strategies."""
+
+    ranked = rank_candidates(
+        candidates,
+        goal,
+        current_context,
+        scorer=scorer,
+        embedder=embedder,
+    )
+    selected = fit_to_budget(ranked, max_tokens)
+    return SelectionResult(ranked=ranked, selected=selected, max_tokens=max_tokens)
+
+
+class PsiLoop:
+    """Thin orchestration shell over candidate fetching and ranking."""
+
+    def __init__(
+        self,
+        source: CandidateSource | None = None,
+        embedder: Embedder | None = None,
+        scorer: CandidateScorer = psi_0,
+    ):
+        self.source = source
+        self.embedder = embedder
+        self.scorer = scorer
+
+    def select(
+        self,
+        goal: str,
+        current_context: Iterable[str],
+        max_tokens: int,
+        candidates: Sequence[Candidate] | None = None,
+        fetch_k: int | None = None,
+        task_id: str | None = None,
+    ) -> SelectionResult:
+        """Select context from provided candidates or a configured source."""
+
+        context_items = tuple(current_context)
+        if candidates is None:
+            if self.source is None:
+                raise ValueError("PsiLoop requires either candidates or a configured source.")
+            request = SourceRequest(
+                goal=goal,
+                current_context=context_items,
+                limit=fetch_k,
+                task_id=task_id,
+            )
+            candidates = self.source.fetch(request)
+
+        return select_with_scorer(
+            candidates=candidates,
+            goal=goal,
+            current_context=context_items,
+            max_tokens=max_tokens,
+            scorer=self.scorer,
+            embedder=self.embedder,
+        )

@@ -1,8 +1,8 @@
 # psi-loop
 
-`psi-loop` is a small Python prototype for goal-conditioned context selection. Instead of ranking context by similarity alone, it ranks candidates by two signals: how relevant they are to the goal, and how novel they are relative to what is already in context. The result is a minimal, testable implementation of `Psi0`: prefer context that is both useful and non-redundant.
+`psi-loop` is a small Python library for redundancy-aware context selection. Instead of ranking candidates by similarity alone, it scores them by two signals: how relevant they are to the goal, and how novel they are relative to what is already in context. The core rule is `Psi0`: prefer context that is both useful and non-redundant.
 
-This first release is intentionally narrow. It ships a library, a CLI, fixture-driven tests, and a similarity-only baseline so the ranking thesis can be evaluated locally before building the larger agent runtime described in the research documents.
+The package is still intentionally narrow, but it is no longer just a hardcoded demo. It now exposes pluggable embedders, pluggable candidate sources, a thin `PsiLoop` orchestration layer, and a zero-dependency bag-of-words fallback so the ranking thesis can be exercised locally before introducing heavier retrieval or embedding backends.
 
 ## Why It Exists
 
@@ -12,12 +12,13 @@ Standard retrieval tends to return whatever looks semantically similar to the go
 - `H`: surprise relative to the current context
 - `Psi0 = H * V`
 
-The goal of this repo is not to ship a full agent system yet. The goal is to prove that this ranking rule is worth keeping.
+The goal of this repo is not to ship a full agent system yet. The goal is to prove that this ranking rule is worth keeping, and to make it easy to plug into richer retrieval systems later.
 
 ## MVP Scope
 
 - `Psi0` only
-- Deterministic, local scoring
+- Pluggable embedders and candidate sources
+- Zero-dependency default behavior
 - Budgeted context selection
 - Baseline comparison against plain goal similarity
 - Test fixtures and GitHub Actions CI
@@ -62,14 +63,29 @@ Run the test suite:
 pytest
 ```
 
+## Public API
+
+The current package is organized around three main extension points:
+
+- `Embedder`: text-to-vector protocol
+- `CandidateSource`: candidate retrieval protocol
+- `PsiLoop`: thin orchestration shell that fetches candidates, scores them, and fits them to a budget
+
+The default install path remains zero-dependency:
+
+- `BowEmbedder` is the fallback embedder
+- `FixtureSource` is the default demo source
+
 ## How It Works
 
 `Psi0` combines two simple signals:
 
 - `V`: keyword overlap between a candidate and the goal
-- `H`: surprise, approximated as bag-of-words distance from the current context
+- `H`: surprise relative to the current context
 
 The package ranks candidates by `H * V`, then fits the result into a shared token budget. A similarity-only baseline is included for comparison so fixtures can demonstrate where goal-conditioned salience beats naive retrieval.
+
+By default, `H` is still computed through the bundled `BowEmbedder`, which preserves the current bag-of-words behavior. The scoring functions now also accept injected embedders, which is the seam intended for future dense-vector backends.
 
 In the bundled example, the baseline prefers a note that repeats the existing fixed-delay retry policy, while `Psi0` prefers the more novel note about exponential backoff with jitter.
 
@@ -84,26 +100,36 @@ If you want to evaluate whether the project is doing anything useful yet, use th
 
 The fastest way to learn the system is to tweak the fixture and rerun the CLI. That gives you immediate feedback on whether the ranking rule is behaving intuitively.
 
+If you want to test the new protocol seam rather than just the demo:
+
+1. Inject a fake embedder in tests to force a known vector geometry.
+2. Use `FixtureSource` in tests or scripts to load candidate pools without going through CLI parsing.
+3. Instantiate `PsiLoop(source=..., embedder=...)` and compare its ranked output to `select_context_baseline(...)`.
+
 ## Repo Layout
 
+- `src/psi_loop/embedders.py`: `Embedder` protocol, `BowEmbedder`, and shared vector math
+- `src/psi_loop/sources.py`: `CandidateSource` protocol and `FixtureSource`
 - `src/psi_loop/scoring.py`: scoring primitives for `V`, `H`, and `Psi0`
-- `src/psi_loop/pipeline.py`: ranking and budgeted selection
+- `src/psi_loop/pipeline.py`: `PsiLoop`, ranking helpers, and budget fitting
 - `src/psi_loop/baseline.py`: similarity-only comparison path
-- `src/psi_loop/cli.py`: fixture runner for local experiments
+- `src/psi_loop/cli.py`: fixture-backed CLI for local experiments
 - `src/psi_loop/data/sample_tasks.json`: bundled demo data for first-run testing
 - `tests/`: scoring, pipeline, and fixture-based regression tests
 
 ## Current Limits
 
 - Tokenization and stemming are intentionally simple heuristics.
-- Surprise is approximated with bag-of-words distance, not embeddings.
+- The default embedder is still bag-of-words, not a dense embedding backend.
+- `FixtureSource` is a demo source, not a production retrieval layer.
 - The bundled fixture proves the concept on one narrow scenario, not a benchmark suite.
 
 ## Next Steps
 
+- Add a dense embedder implementation behind the `Embedder` protocol
+- Add richer source implementations behind `CandidateSource`
 - Add `Psi1` hooks for triggered retrieval during reasoning
 - Add post-action usefulness tracking and `Psi0`/`Psi2` calibration
-- Swap the deterministic surprise/value proxies for richer embedding or model-backed scorers
 - Expand fixtures into a repeatable evaluation harness
 
 ## License

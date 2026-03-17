@@ -3,7 +3,8 @@ from pathlib import Path
 
 from psi_loop.baseline import select_context_baseline
 from psi_loop.models import Candidate
-from psi_loop.pipeline import select_context
+from psi_loop.pipeline import PsiLoop, select_context
+from psi_loop.sources import FixtureSource
 
 
 def _load_task(task_id: str) -> dict:
@@ -64,3 +65,18 @@ def test_budgeted_selection_skips_items_that_do_not_fit():
     selected_ids = [item.candidate.id for item in result.selected]
     assert "large" not in selected_ids
     assert selected_ids
+
+
+def test_psiloop_fetches_from_source_when_candidates_are_not_provided():
+    source = FixtureSource(Path(__file__).parent / "fixtures" / "sample_tasks.json")
+    loop = PsiLoop(source=source)
+    task = source.get_task("retry_backoff")
+
+    result = loop.select(
+        goal=task.goal,
+        current_context=task.current_context,
+        max_tokens=task.max_tokens,
+        task_id=task.id,
+    )
+
+    assert result.ranked[0].candidate.id == "novel_backoff_jitter"

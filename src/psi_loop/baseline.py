@@ -2,28 +2,41 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 
+from psi_loop.embedders import Embedder
 from psi_loop.models import Candidate, ScoredCandidate, SelectionResult
-from psi_loop.pipeline import fit_to_budget
-from psi_loop.scoring import goal_similarity, tokenize
+from psi_loop.pipeline import fit_to_budget, rank_candidates
+from psi_loop.scoring import goal_similarity
 
 
-def rank_candidates_baseline(candidates: Sequence[Candidate], goal: str) -> list[ScoredCandidate]:
+def baseline_score(
+    candidate_text: str,
+    goal: str,
+    current_context: Iterable[str],
+    embedder: Embedder | None = None,
+) -> tuple[float, float, float]:
+    """Similarity-only scorer compatible with the shared pipeline."""
+
+    del current_context
+    score = goal_similarity(candidate_text, goal, embedder=embedder)
+    return score, score, 0.0
+
+
+def rank_candidates_baseline(
+    candidates: Sequence[Candidate],
+    goal: str,
+    embedder: Embedder | None = None,
+) -> list[ScoredCandidate]:
     """Rank candidates by plain goal similarity."""
 
-    ranked: list[ScoredCandidate] = []
-    for candidate in candidates:
-        ranked.append(
-            ScoredCandidate(
-                candidate=candidate,
-                score=goal_similarity(candidate.text, goal),
-                value=goal_similarity(candidate.text, goal),
-                surprise=0.0,
-                token_count=len(tokenize(candidate.text)),
-            )
-        )
-
+    ranked = rank_candidates(
+        candidates,
+        goal=goal,
+        current_context=[],
+        scorer=baseline_score,
+        embedder=embedder,
+    )
     return sorted(ranked, key=lambda item: (-item.score, item.candidate.id))
 
 
@@ -31,9 +44,10 @@ def select_context_baseline(
     candidates: Sequence[Candidate],
     goal: str,
     max_tokens: int,
+    embedder: Embedder | None = None,
 ) -> SelectionResult:
     """Rank and select with a similarity-only baseline."""
 
-    ranked = rank_candidates_baseline(candidates, goal)
+    ranked = rank_candidates_baseline(candidates, goal, embedder=embedder)
     selected = fit_to_budget(ranked, max_tokens)
     return SelectionResult(ranked=ranked, selected=selected, max_tokens=max_tokens)

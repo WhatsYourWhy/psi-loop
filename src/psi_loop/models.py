@@ -34,3 +34,25 @@ class SelectionResult:
     ranked: list[ScoredCandidate]
     selected: list[ScoredCandidate]
     max_tokens: int
+
+
+@dataclass(frozen=True, slots=True)
+class SourceRequest:
+    """Input for a candidate source query."""
+
+    goal: str
+    current_context: tuple[str, ...] = ()
+    limit: int | None = None
+    task_id: str | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass(frozen=True, slots=True)
+class TaskDefinition:
+    """Fixture-style task definition used by the demo CLI and tests."""
+
+    id: str
+    goal: str
+    current_context: list[str]
+    max_tokens: int
+    candidates: list[Candidate]
