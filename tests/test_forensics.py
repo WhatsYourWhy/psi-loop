@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from psi_loop.embedders import Embedder
+from psi_loop.evaluation import evaluate_task
 from psi_loop.forensics import build_task_forensics, render_task_forensics, trace_budget
 from psi_loop.models import Candidate, ScoredCandidate
 from psi_loop.sources import FixtureSource
@@ -93,3 +94,8 @@ def test_roadmap_useful_outranks_unrelated_with_crafted_embedder():
     assert report.psi0.ranked[1].candidate.id == "unrelated_visual_refresh"
     assert report.psi0.ranked[0].score > report.psi0.ranked[1].score
     assert report.psi0.selected[0].candidate.id == "novel_data_contracts"
+
+    # Exercise baseline path and task winner so benchmark-style outcome is locked in.
+    assert report.baseline.selected[0].candidate.id == "redundant_flaky_dashboards"
+    task_result = evaluate_task(task, embedder=embedder)
+    assert task_result["winner"] == "psi0"
