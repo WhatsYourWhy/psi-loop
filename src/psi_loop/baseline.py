@@ -46,8 +46,13 @@ def select_context_baseline(
     max_tokens: int,
     embedder: Embedder | None = None,
 ) -> SelectionResult:
-    """Rank and select with a similarity-only baseline."""
+    """Rank and select with a similarity-only baseline.
+
+    Dense cosine similarity can be negative for anti-goal candidates. Keep those
+    items in the ranked list for inspection, but do not allow them into the
+    selected context window.
+    """
 
     ranked = rank_candidates_baseline(candidates, goal, embedder=embedder)
-    selected = fit_to_budget(ranked, max_tokens)
+    selected = fit_to_budget([item for item in ranked if item.score > 0.0], max_tokens)
     return SelectionResult(ranked=ranked, selected=selected, max_tokens=max_tokens)

@@ -12,7 +12,7 @@ Does `Psi0` select better context than the similarity-only baseline under token 
 - Bow runner: `python scripts/run_baseline_vs_psi0.py --backend bow`
 - Dense runner: `python scripts/run_baseline_vs_psi0.py --backend dense`
 - Bow result artifact: `evaluation_results_baseline_vs_psi0_bow.json`
-- Dense result artifact: `evaluation_results_baseline_vs_psi0_dense.json`
+- Dense result artifact: `evaluation_results_baseline_vs_psi0_dense_all-MiniLM-L6-v2.json`
 - Dense model: `all-MiniLM-L6-v2`
 - Result metadata: each JSON artifact records `embedder_metadata.backend`, `embedder_metadata.class_name`, and `embedder_metadata.model_name`
 

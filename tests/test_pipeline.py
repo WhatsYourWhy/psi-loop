@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 
 from psi_loop.baseline import select_context_baseline
+from psi_loop.embedders import Embedder
 from psi_loop.models import Candidate
 from psi_loop.pipeline import PsiLoop, select_context
 from psi_loop.sources import FixtureSource
@@ -96,3 +97,35 @@ def test_weighted_v_prefers_mechanism_candidate_over_generic_goal_shell():
     )
 
     assert result.ranked[0].candidate.id == "mechanism"
+
+
+class OpposingDenseEmbedder(Embedder):
+    def __init__(self, vectors: dict[str, tuple[float, ...]]):
+        self.vectors = vectors
+
+    def embed(self, text: str) -> tuple[float, ...]:
+        return self.vectors[text]
+
+
+def test_baseline_does_not_select_negative_dense_scores():
+    candidates = [
+        Candidate(id="anti", text="anti", source="a"),
+        Candidate(id="also_anti", text="also_anti", source="b"),
+    ]
+    embedder = OpposingDenseEmbedder(
+        {
+            "goal": (1.0, 0.0),
+            "anti": (-1.0, 0.0),
+            "also_anti": (-0.5, 0.0),
+        }
+    )
+
+    result = select_context_baseline(
+        candidates=candidates,
+        goal="goal",
+        max_tokens=10,
+        embedder=embedder,
+    )
+
+    assert [item.candidate.id for item in result.ranked] == ["also_anti", "anti"]
+    assert result.selected == []

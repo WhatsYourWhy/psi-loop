@@ -109,7 +109,7 @@ For the more formal benchmark path:
 
 1. Run `python scripts/run_baseline_vs_psi0.py --backend bow` for the zero-dependency baseline comparison.
 2. Optionally install `python -m pip install -e .[dense]` and run `python scripts/run_baseline_vs_psi0.py --backend dense`.
-3. Inspect `evaluation_results_baseline_vs_psi0_bow.json` and `evaluation_results_baseline_vs_psi0_dense.json` for structured task-level outputs, including embedder metadata.
+3. Inspect `evaluation_results_baseline_vs_psi0_bow.json` and `evaluation_results_baseline_vs_psi0_dense_all-MiniLM-L6-v2.json` for structured task-level outputs, including embedder metadata. Dense defaults are model-specific so runs with different `--model-name` values do not overwrite each other.
 4. Read `evaluation_baseline_vs_psi0.md` for the scientist-style interpretation of the latest run.
 
 The fastest way to learn the system is to tweak the fixture and rerun the CLI. That gives you immediate feedback on whether the ranking rule is behaving intuitively.

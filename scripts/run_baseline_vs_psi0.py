@@ -3,18 +3,32 @@
 from __future__ import annotations
 
 import argparse
+import re
 from pathlib import Path
 
 from psi_loop.embedders import BowEmbedder, STEmbedder
 from psi_loop.evaluation import run_benchmark, write_results_json
 
 
-def default_output_path_for_backend(backend: str) -> Path:
-    return Path(f"evaluation_results_baseline_vs_psi0_{backend}.json")
+def _slugify_model_name(model_name: str) -> str:
+    compact = re.sub(r"[^A-Za-z0-9._-]+", "-", model_name.strip())
+    compact = compact.strip("-._")
+    return compact or "model"
 
 
-def resolve_json_output_path(json_out: Path | None, backend: str) -> Path:
-    return json_out if json_out is not None else default_output_path_for_backend(backend)
+def default_output_path_for_backend(backend: str, model_name: str | None = None) -> Path:
+    suffix = backend
+    if backend == "dense" and model_name is not None:
+        suffix = f"{backend}_{_slugify_model_name(model_name)}"
+    return Path(f"evaluation_results_baseline_vs_psi0_{suffix}.json")
+
+
+def resolve_json_output_path(
+    json_out: Path | None,
+    backend: str,
+    model_name: str | None = None,
+) -> Path:
+    return json_out if json_out is not None else default_output_path_for_backend(backend, model_name)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -97,7 +111,7 @@ def main() -> int:
         embedder = BowEmbedder()
 
     results = run_benchmark(args.fixture, embedder=embedder)
-    output_path = resolve_json_output_path(args.json_out, args.backend)
+    output_path = resolve_json_output_path(args.json_out, args.backend, args.model_name)
     write_results_json(results, output_path)
     print_summary(results)
     return 0

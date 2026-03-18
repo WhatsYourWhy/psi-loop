@@ -14,12 +14,30 @@ def test_default_output_path_is_backend_specific():
     assert MODULE.default_output_path_for_backend("bow") == Path(
         "evaluation_results_baseline_vs_psi0_bow.json"
     )
-    assert MODULE.default_output_path_for_backend("dense") == Path(
-        "evaluation_results_baseline_vs_psi0_dense.json"
+    assert MODULE.default_output_path_for_backend(
+        "dense",
+        "sentence-transformers/all-MiniLM-L6-v2",
+    ) == Path(
+        "evaluation_results_baseline_vs_psi0_dense_sentence-transformers-all-MiniLM-L6-v2.json"
     )
 
 
 def test_resolve_json_output_path_preserves_explicit_override():
     explicit = Path("custom-results.json")
 
-    assert MODULE.resolve_json_output_path(explicit, "dense") == explicit
+    assert (
+        MODULE.resolve_json_output_path(
+            explicit,
+            "dense",
+            "sentence-transformers/all-MiniLM-L6-v2",
+        )
+        == explicit
+    )
+
+
+def test_resolve_json_output_path_uses_model_specific_dense_default():
+    assert MODULE.resolve_json_output_path(
+        None,
+        "dense",
+        "sentence-transformers/all-MiniLM-L6-v2",
+    ) == Path("evaluation_results_baseline_vs_psi0_dense_sentence-transformers-all-MiniLM-L6-v2.json")
