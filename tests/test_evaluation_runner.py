@@ -1,7 +1,17 @@
 from pathlib import Path
 
+from psi_loop.embedders import Embedder
 from psi_loop.evaluation import run_benchmark
 from psi_loop.sources import FixtureSource
+
+
+class DeterministicDenseEmbedder(Embedder):
+    def embed(self, text: str) -> tuple[float, ...]:
+        return (
+            float(len(text)),
+            float(sum(ord(char) for char in text) % 97),
+            float(text.count(" ")),
+        )
 
 
 def test_benchmark_fixture_loads_with_metadata():
@@ -25,3 +35,12 @@ def test_run_benchmark_returns_expected_structure():
     assert results["task_results"][0]["winner"] in {"psi0", "baseline", "tie"}
     assert "psi0" in results["task_results"][0]
     assert "baseline" in results["task_results"][0]
+
+
+def test_run_benchmark_accepts_non_default_embedder():
+    fixture = Path(__file__).parent / "fixtures" / "benchmark_tasks.json"
+
+    results = run_benchmark(fixture, embedder=DeterministicDenseEmbedder())
+
+    assert results["embedder"] == "DeterministicDenseEmbedder"
+    assert results["aggregate"]["total_tasks"] == 14

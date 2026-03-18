@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
+from psi_loop.embedders import BowEmbedder, STEmbedder
 from psi_loop.evaluation import run_benchmark, write_results_json
 
 
@@ -21,6 +22,17 @@ def build_parser() -> argparse.ArgumentParser:
         type=Path,
         default=Path("evaluation_results_baseline_vs_psi0.json"),
         help="Path to write the structured JSON results.",
+    )
+    parser.add_argument(
+        "--backend",
+        choices=("bow", "dense"),
+        default="bow",
+        help="Embedder backend to use for the benchmark run.",
+    )
+    parser.add_argument(
+        "--model-name",
+        default="all-MiniLM-L6-v2",
+        help="Dense model name to use when --backend dense is selected.",
     )
     return parser
 
@@ -65,7 +77,13 @@ def print_summary(results: dict) -> None:
 def main() -> int:
     parser = build_parser()
     args = parser.parse_args()
-    results = run_benchmark(args.fixture)
+
+    if args.backend == "dense":
+        embedder = STEmbedder(model_name=args.model_name)
+    else:
+        embedder = BowEmbedder()
+
+    results = run_benchmark(args.fixture, embedder=embedder)
     write_results_json(results, args.json_out)
     print_summary(results)
     return 0
