@@ -221,3 +221,11 @@ Two fixes applied: (a) **Guard:** plan bonus is applied only when `v_base > 0`, 
 
 - **Bow:** psi0=4, baseline=0, tie=10; useful 5, redundant 7. Unchanged (no regression).
 - **Dense:** psi0=2, baseline=1, tie=11; useful 2, redundant 6. Unchanged; `realistic_roadmap_planning` still baseline win. Roadmap outcome unchanged.
+
+### Run, test and log (2025-03-17)
+
+Full test suite, Bow and Dense benchmarks re-run with current code (P2 guard + planning trigger, normalized cue sets). Artifacts: `evaluation_results_baseline_vs_psi0_bow_plan_bonus.json`, `evaluation_results_baseline_vs_psi0_dense_all-MiniLM-L6-v2_plan_bonus.json`.
+
+- **Tests:** 41 passed in 0.28s.
+- **Bow:** Wins psi0=4, baseline=0, tie=10. Useful: psi0=5, baseline=1. Redundant: psi0=7, baseline=12. `realistic_roadmap_planning`: tie (both select `novel_data_contracts`).
+- **Dense:** Wins psi0=2, baseline=1, tie=11. Useful: psi0=2, baseline=1. Redundant: psi0=6, baseline=13. `realistic_roadmap_planning`: baseline win (Psi0 `unrelated_visual_refresh`, baseline `novel_data_contracts`).
