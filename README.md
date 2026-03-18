@@ -12,6 +12,8 @@ Standard retrieval tends to return whatever looks semantically similar to the go
 - `H`: surprise relative to the current context
 - `Psi0 = H * V`
 
+Ranking uses linear `V × H` scoring with **near-tie value-priority**: when two candidates' scores differ by less than `NEAR_TIE_EPSILON` (0.01), the one with higher value is ranked first so budget packing prefers usefulness over novelty in close score contests.
+
 The goal of this repo is not to ship a full agent system yet. The goal is to prove that this ranking rule is worth keeping, and to make it easy to plug into richer retrieval systems later.
 
 ## MVP Scope
@@ -90,7 +92,7 @@ The default install path remains zero-dependency:
 - `V`: keyword overlap between a candidate and the goal
 - `H`: surprise relative to the current context
 
-The package ranks candidates by `H * V`, then fits the result into a shared token budget. A similarity-only baseline is included for comparison so fixtures can demonstrate where goal-conditioned salience beats naive retrieval.
+The package ranks candidates by `H * V` (with near-tie value-priority at selection time), then fits the result into a shared token budget. A similarity-only baseline is included for comparison so fixtures can demonstrate where goal-conditioned salience beats naive retrieval.
 
 By default, `H` is still computed through the bundled `BowEmbedder`, which preserves the current bag-of-words behavior. The scoring functions now also accept injected embedders, which is the seam intended for future dense-vector backends.
 

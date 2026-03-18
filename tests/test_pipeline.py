@@ -4,7 +4,7 @@ from pathlib import Path
 from psi_loop.baseline import select_context_baseline
 from psi_loop.embedders import Embedder
 from psi_loop.models import Candidate
-from psi_loop.pipeline import PsiLoop, select_context
+from psi_loop.pipeline import PsiLoop, rank_candidates, select_context
 from psi_loop.sources import FixtureSource
 
 
@@ -47,6 +47,58 @@ def test_baseline_prefers_redundant_candidate():
     )
 
     assert result.ranked[0].candidate.id == "redundant_fixed_delay"
+
+
+def test_near_tie_v_priority_ranks_higher_value_first():
+    """When two candidates have scores within NEAR_TIE_EPSILON, higher value is rank-1."""
+    candidates = [
+        Candidate(id="low_v", text="low_v_note", source="a"),
+        Candidate(id="high_v", text="high_v_note", source="b"),
+    ]
+    # Scores 0.232 vs 0.231 (within 0.01); high_v has value 0.41, low_v has 0.30.
+    scores_by_text = {
+        "low_v_note": (0.232, 0.30, 0.8),
+        "high_v_note": (0.231, 0.41, 0.5),
+    }
+
+    def scorer(text: str, goal: str, context, embedder):
+        return scores_by_text[text]
+
+    ranked = rank_candidates(
+        candidates,
+        goal="goal",
+        current_context=[],
+        scorer=scorer,
+    )
+    assert ranked[0].candidate.id == "high_v"
+    assert ranked[0].value == 0.41
+    assert ranked[1].candidate.id == "low_v"
+    assert ranked[1].value == 0.30
+
+
+def test_near_tie_large_score_gap_still_ranks_by_score():
+    """When scores differ by more than epsilon, higher score wins (no tie)."""
+    candidates = [
+        Candidate(id="low_score", text="low_score_note", source="a"),
+        Candidate(id="high_score", text="high_score_note", source="b"),
+    ]
+    # Scores 0.25 vs 0.10 (gap 0.15 > 0.01); low_score has higher value but lower score.
+    scores_by_text = {
+        "low_score_note": (0.10, 0.9, 0.1),
+        "high_score_note": (0.25, 0.5, 0.5),
+    }
+
+    def scorer(text: str, goal: str, context, embedder):
+        return scores_by_text[text]
+
+    ranked = rank_candidates(
+        candidates,
+        goal="goal",
+        current_context=[],
+        scorer=scorer,
+    )
+    assert ranked[0].candidate.id == "high_score"
+    assert ranked[0].score == 0.25
 
 
 def test_budgeted_selection_skips_items_that_do_not_fit():
