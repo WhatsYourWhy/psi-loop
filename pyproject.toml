@@ -23,6 +23,7 @@ dependencies = []
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0"]
+dense = ["sentence-transformers"]
 
 [project.scripts]
 psi-loop = "psi_loop.cli:main"

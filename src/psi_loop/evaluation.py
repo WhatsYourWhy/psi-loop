@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from psi_loop.baseline import select_context_baseline
-from psi_loop.embedders import BowEmbedder, Embedder
+from psi_loop.embedders import BowEmbedder, Embedder, STEmbedder
 from psi_loop.models import ScoredCandidate, TaskDefinition
 from psi_loop.pipeline import PsiLoop
 from psi_loop.sources import FixtureSource
@@ -171,6 +171,23 @@ def summarize_results(task_results: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
+def describe_embedder(embedder: Embedder | None) -> dict[str, Any]:
+    """Return structured metadata for benchmark reproducibility."""
+
+    scorer = embedder if embedder is not None else BowEmbedder()
+    metadata: dict[str, Any] = {
+        "backend": "custom",
+        "class_name": type(scorer).__name__,
+        "model_name": None,
+    }
+    if isinstance(scorer, BowEmbedder):
+        metadata["backend"] = "bow"
+    elif isinstance(scorer, STEmbedder):
+        metadata["backend"] = "dense"
+        metadata["model_name"] = scorer.model_name
+    return metadata
+
+
 def run_benchmark(
     fixture_path: Path,
     embedder: Embedder | None = None,
@@ -181,9 +198,11 @@ def run_benchmark(
     tasks = source.tasks()
     task_results = [evaluate_task(task, embedder=embedder) for task in tasks]
     aggregate = summarize_results(task_results)
+    embedder_metadata = describe_embedder(embedder)
     return {
         "fixture_path": str(fixture_path),
-        "embedder": type(embedder).__name__ if embedder is not None else "BowEmbedder",
+        "embedder": embedder_metadata["class_name"],
+        "embedder_metadata": embedder_metadata,
         "task_results": task_results,
         "aggregate": aggregate,
     }

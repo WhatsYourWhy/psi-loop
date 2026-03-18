@@ -1,9 +1,9 @@
-"""Embedder protocols and the zero-dependency default implementation."""
+"""Embedder protocols and concrete backend implementations."""
 
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
-from typing import Protocol
+from typing import Any, Protocol
 
 from psi_loop.text import token_counts
 
@@ -25,6 +25,37 @@ class BowEmbedder:
     def embed(self, text: str) -> SparseVector:
         counts = token_counts(text)
         return {token: float(value) for token, value in counts.items()}
+
+
+class STEmbedder:
+    """Optional dense embedder powered by sentence-transformers."""
+
+    def __init__(self, model_name: str = "all-MiniLM-L6-v2"):
+        self.model_name = model_name
+        self._model: Any | None = None
+
+    def _load_model(self) -> Any:
+        if self._model is None:
+            try:
+                from sentence_transformers import SentenceTransformer
+            except ImportError as exc:
+                raise ImportError(
+                    "STEmbedder requires the optional dense dependencies. "
+                    "Install them with `python -m pip install -e .[dense]`."
+                ) from exc
+
+            self._model = SentenceTransformer(self.model_name)
+        return self._model
+
+    def embed(self, text: str) -> DenseVector:
+        model = self._load_model()
+        vector = model.encode(
+            text,
+            convert_to_numpy=True,
+            normalize_embeddings=False,
+            show_progress_bar=False,
+        )
+        return tuple(float(value) for value in vector.tolist())
 
 
 def is_sparse_vector(vector: Vector) -> bool:

@@ -2,16 +2,19 @@
 
 ## Question
 
-Does `Psi0` select better context than the similarity-only baseline under token constraints?
+Does `Psi0` select better context than the similarity-only baseline under token constraints, and does a stronger representation backend materially improve that result?
 
 ## Setup
 
 - Selector under test: `Psi0`
 - Baseline: similarity-only ranking
-- Embedder: `BowEmbedder`
 - Benchmark fixture: `tests/fixtures/benchmark_tasks.json`
-- Runner: `python scripts/run_baseline_vs_psi0.py`
-- Result artifact: `evaluation_results_baseline_vs_psi0.json`
+- Bow runner: `python scripts/run_baseline_vs_psi0.py --backend bow`
+- Dense runner: `python scripts/run_baseline_vs_psi0.py --backend dense`
+- Bow result artifact: `evaluation_results_baseline_vs_psi0_bow.json`
+- Dense result artifact: `evaluation_results_baseline_vs_psi0_dense_all-MiniLM-L6-v2.json`
+- Dense model: `all-MiniLM-L6-v2`
+- Result metadata: each JSON artifact records `embedder_metadata.backend`, `embedder_metadata.class_name`, and `embedder_metadata.model_name`
 
 ## Benchmark Design
 
@@ -50,92 +53,86 @@ Aggregate metrics:
 
 ## Results
 
-### Aggregate
+### Comparison matrix
 
-- Total tasks: 14
-- `Psi0` wins: 4
-- Baseline wins: 0
-- Ties: 10
-- `Psi0` win rate: 28.6%
-- `Psi0` useful hits: 5
-- Baseline useful hits: 1
-- `Psi0` redundant hits: 7
-- Baseline redundant hits: 12
-- Expected-winner matches: 4 / 14
-- Decision: `refine_v`
+| Backend | Psi0 wins | Baseline wins | Ties | Psi0 useful hits | Baseline useful hits | Psi0 redundant hits | Baseline redundant hits | Expected matches | Decision |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---|
+| `BowEmbedder` | 4 | 0 | 10 | 5 | 1 | 7 | 12 | 4 / 14 | `refine_v` |
+| `STEmbedder` | 2 | 1 | 11 | 2 | 1 | 6 | 13 | 2 / 14 | `refine_v` |
 
 ### By category
+
+#### `BowEmbedder`
 
 - `synthetic_redundancy`: `Psi0` 3, baseline 0, tie 7
 - `realistic_knowledge_work`: `Psi0` 1, baseline 0, tie 3
 
+#### `STEmbedder`
+
+- `synthetic_redundancy`: `Psi0` 2, baseline 0, tie 8
+- `realistic_knowledge_work`: `Psi0` 0, baseline 1, tie 3
+
 ## Interpretation
 
-This is still not the result you would want for a strong publishability claim, but it is better than the previous flat-overlap run.
+The dense backend still changed behavior, but the corrected run did not strengthen the scientific conclusion.
 
-The current `BowEmbedder` path shows directional promise:
+What improved under dense embeddings:
 
-- `Psi0` found more gold useful candidates than the baseline
-- `Psi0` selected fewer gold redundant candidates than the baseline
-- the baseline never beat `Psi0` on this benchmark
-- weighting `V` improved the benchmark over the prior run
+- `Psi0` selected fewer gold redundant candidates: `7 -> 6`
+- the baseline selected even more redundant candidates than before: `12 -> 13`
 
-But it does not yet prove that `Psi0` materially changes outcomes:
+What got worse:
 
-- only 4 of 14 tasks were strict `Psi0` wins
-- 10 tasks were ties
-- the synthetic redundancy slice improved, but still produced only 3 wins out of 10
+- `Psi0` wins dropped: `4 -> 2`
+- useful hits dropped: `5 -> 2`
+- expected-winner matches dropped: `4 -> 2`
+- dense introduced one outright baseline win
+- ties increased: `10 -> 11`
 
-Relative to the previous flat-overlap version, the weighted `V` change produced:
+This means the current limitation is not simply that bag-of-words geometry is too weak. Better representation alone still did not unlock the existing `Psi0` logic on the frozen benchmark.
 
-- `Psi0` wins: `3 -> 4`
-- ties: `11 -> 10`
-- useful hits: `4 -> 5`
-- redundant hits: `9 -> 7`
-- expected-match count: `3 -> 4`
+The dominant failure pattern under dense embeddings was not “baseline beats `Psi0`.” The dominant pattern was:
 
-That is a real directional gain, especially on the synthetic redundancy slice, but it is not yet decisive evidence.
+- `Psi0` suppressed redundancy somewhat better
+- but still often failed to land on the gold useful candidate
+- and in several cases drifted to unrelated candidates instead
 
-The most important takeaway is still that the bottleneck is not system architecture. It is the quality of the scoring signal. The weighted `V` heuristic helped, but the current bag-of-words implementation still appears too weak to consistently distinguish:
-
-- repeated phrasing that matches the goal closely
-- novel but still-goal-relevant candidates
-
-Two failure modes remain clear:
-
-- in `synthetic_incident_playbook`, `Psi0` still preferred an unrelated candidate rather than the gold useful candidate
-- in several synthetic tasks, both selectors still converged on the redundant candidate because lexical overlap remained too dominant
-
-That suggests the scoring signal is improved, but still not robust enough to separate procedural usefulness from topical similarity in many cases.
+That is a sign that the current control signal is still under-specified. The geometry improved, but the selection logic still did not consistently turn that geometry into useful wins.
 
 ## Scientific Conclusion
 
-For the current `BowEmbedder` implementation:
+For the current benchmark:
 
-- `Psi0` is better than baseline on some tasks
-- weighted `V` improved results, especially on synthetic redundancy cases
-- `Psi0` is still not strong enough to count as demonstrated proof
-- the next credible move is either one more targeted scoring refinement or a rerun with a stronger embedder backend
+- `Psi0 + Bow` has directional signal but not proof
+- `Psi0 + dense` did not materially outperform `Psi0 + Bow`
+- dense embeddings alone do not unlock the architecture yet
 
-This benchmark does not justify expanding the broader system yet.
+The result is scientifically useful because it narrows the hypothesis:
 
-It does justify one more focused round of work on the control signal itself.
+- the ranking principle still appears to have some signal
+- representation quality alone is not enough
+- the remaining bottleneck is likely still in the scoring signal or its balance, not just the embedder backend
 
 ## Recommended Next Decision
 
-Do not add more system features yet.
+Do not expand the system yet.
 
-Instead choose one of these:
+The dense experiment answered the question it was supposed to answer: swapping in a stronger embedder did not convert the benchmark into proof.
 
-1. If you want one more lexical pass, keep it tightly scoped and benchmark-driven.
-2. Otherwise, the more credible next move is to add a dense embedder behind the existing protocol seam and rerun the exact same evaluation.
+That means the next credible move is not “more architecture.” It is one of:
 
-If neither change materially improves the benchmark, the current direction should be reconsidered rather than expanded.
+1. revise the scoring signal again in a tightly scoped way and rerun the frozen benchmark
+2. tighten the benchmark or gold-label definitions if they are not exposing the distinction cleanly enough
+3. stop if the control logic cannot be made to produce materially stronger wins under the fixed task set
+
+Right now, the evidence does **not** justify claiming that better semantic geometry alone unlocks `Psi0`.
 
 ## Reproduction
 
 ```powershell
 python -m pip install -e .[dev]
-python scripts/run_baseline_vs_psi0.py
+python -m pip install -e .[dense]
 pytest
+python scripts/run_baseline_vs_psi0.py --backend bow
+python scripts/run_baseline_vs_psi0.py --backend dense
 ```

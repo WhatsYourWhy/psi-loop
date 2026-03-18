@@ -1,5 +1,5 @@
-from psi_loop.embedders import Embedder
-from psi_loop.scoring import goal_term_weight, keyword_overlap, psi_0, surprise_score
+from psi_loop.embedders import Embedder, centroid, cosine_similarity_vectors
+from psi_loop.scoring import goal_similarity, goal_term_weight, keyword_overlap, psi_0, surprise_score
 
 
 class FakeDenseEmbedder(Embedder):
@@ -8,6 +8,15 @@ class FakeDenseEmbedder(Embedder):
 
     def embed(self, text: str) -> tuple[float, ...]:
         return self.vectors[text]
+
+
+class DeterministicDenseEmbedder(Embedder):
+    def embed(self, text: str) -> tuple[float, ...]:
+        return (
+            float(len(text)),
+            float(sum(ord(char) for char in text) % 101),
+            float(text.count(" ")),
+        )
 
 
 def test_keyword_overlap_counts_goal_terms():
@@ -65,6 +74,40 @@ def test_surprise_score_accepts_injected_embedder():
     assert round(score, 3) == 0.293
 
 
+def test_surprise_score_clamps_negative_dense_cosine_to_one():
+    embedder = FakeDenseEmbedder(
+        {
+            "candidate": (-1.0, 0.0),
+            "context_a": (1.0, 0.0),
+        }
+    )
+
+    score = surprise_score("candidate", ["context_a"], embedder=embedder)
+
+    assert score == 1.0
+
+
+def test_goal_similarity_accepts_dense_embedder():
+    embedder = FakeDenseEmbedder(
+        {
+            "left": (1.0, 0.0),
+            "right": (0.0, 1.0),
+        }
+    )
+
+    assert goal_similarity("left", "right", embedder=embedder) == 0.0
+
+
+def test_dense_vector_centroid_path_stays_compatible():
+    vectors = [(1.0, 0.0), (0.0, 1.0)]
+
+    center = centroid(vectors)
+    similarity = cosine_similarity_vectors((1.0, 0.0), center)
+
+    assert center == (0.5, 0.5)
+    assert round(similarity, 3) == 0.707
+
+
 def test_psi0_accepts_injected_embedder_without_changing_value_signal():
     embedder = FakeDenseEmbedder(
         {
@@ -85,17 +128,16 @@ def test_psi0_accepts_injected_embedder_without_changing_value_signal():
     assert score == 0.0
 
 
-def test_psi0_value_signal_stays_embedder_independent():
-    goal = "Design Python API client retry logic with exponential backoff and jitter"
-    candidate = "Use backoff jitter retry"
-    embedder = FakeDenseEmbedder(
-        {
-            candidate: (1.0, 0.0),
-            "context": (0.0, 1.0),
-        }
+def test_deterministic_dense_embedder_can_drive_psi0():
+    embedder = DeterministicDenseEmbedder()
+
+    score, value, surprise = psi_0(
+        "Exponential backoff handles retries",
+        "Use exponential backoff for retries",
+        ["Retry with fixed delay"],
+        embedder=embedder,
     )
 
-    no_embedder_score = psi_0(candidate, goal, ["context"])[1]
-    dense_embedder_score = psi_0(candidate, goal, ["context"], embedder=embedder)[1]
-
-    assert no_embedder_score == dense_embedder_score
+    assert value > 0.5
+    assert 0.0 <= surprise <= 1.0
+    assert 0.0 <= score <= 1.0

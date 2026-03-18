@@ -115,7 +115,7 @@ def surprise_score(
     context_vectors = [scorer.embed(part) for part in context_items]
     context_centroid = centroid(context_vectors)
     similarity = cosine_similarity_vectors(candidate_vector, context_centroid)
-    return max(0.0, 1.0 - similarity)
+    return max(0.0, min(1.0, 1.0 - similarity))
 
 
 def goal_similarity(candidate_text: str, goal: str, embedder: Embedder | None = None) -> float:
