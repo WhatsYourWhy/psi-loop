@@ -148,3 +148,76 @@ pytest -v
 | Dense (linear baseline) | 2 | 1 | 11 | 2 | 6 |
 
 **Conclusion:** On the frozen benchmark, tempered H did not improve over linear V×H: Bow regressed (fewer wins, more redundant hits); Dense improved on roadmap (tie instead of baseline win) and useful hits but at higher Psi0 redundant hits. No clear win; linear V×H remains the stronger baseline for Bow on this fixture.
+
+---
+
+## 2025-03-17 — Planning-structure V bonus experiment
+
+**Change:** Add a small deterministic plan-structure bonus to V: when the goal is planning-shaped (tokens: plan, roadmap, rollout, migration, migrate, timeline, phase), candidate value is `V' = clamp(V_base + α·S_plan, 0, 1)` with α=0.12 and S_plan from bucketed cue coverage (sequencing, dependency, planning/risk). Same fixture, same reporting.
+
+### Test suite
+
+```
+pytest -v
+```
+
+- **Result:** 38 passed.
+
+### Bow (plan bonus)
+
+```
+PYTHONPATH=src python scripts/run_baseline_vs_psi0.py --backend bow --json-out evaluation_results_baseline_vs_psi0_bow_plan_bonus.json
+```
+
+| Metric | Plan bonus (this run) | Linear baseline |
+|--------|------------------------|-----------------|
+| Wins | psi0=4, baseline=0, tie=10 | psi0=4, baseline=0, tie=10 |
+| Useful hits | psi0=5, baseline=1 | psi0=5, baseline=1 |
+| Redundant hits | psi0=7, baseline=12 | psi0=7, baseline=12 |
+| Expected-match count | 4/14 | 4/14 |
+
+**Artifacts:** `evaluation_results_baseline_vs_psi0_bow_plan_bonus.json`  
+**Vs baseline:** No change. Bow metrics identical to linear baseline. `realistic_roadmap_planning` remains tie (both select `novel_data_contracts`). No regression.
+
+### Dense (plan bonus)
+
+```
+PYTHONPATH=src python scripts/run_baseline_vs_psi0.py --backend dense --json-out evaluation_results_baseline_vs_psi0_dense_all-MiniLM-L6-v2_plan_bonus.json
+```
+
+| Metric | Plan bonus (this run) | Linear baseline |
+|--------|------------------------|-----------------|
+| Wins | psi0=2, baseline=1, tie=11 | psi0=2, baseline=1, tie=11 |
+| Useful hits | psi0=2, baseline=1 | psi0=2, baseline=1 |
+| Redundant hits | psi0=6, baseline=13 | psi0=6, baseline=13 |
+| Expected-match count | 2/14 | 2/14 |
+
+**Notable:** `realistic_roadmap_planning` — still **baseline win** (Psi0 selects `unrelated_visual_refresh`, baseline selects `novel_data_contracts`). The gold useful candidate text does not contain the current bucket cues (sequencing/dependency/risk), so S_plan=0 for it; bonus did not apply.
+
+**Artifacts:** `evaluation_results_baseline_vs_psi0_dense_all-MiniLM-L6-v2_plan_bonus.json`  
+**Vs baseline:** No change. Dense metrics identical to linear baseline.
+
+### Plan-bonus summary
+
+| Backend | Psi0 wins | Baseline wins | Ties | Psi0 useful | Psi0 redundant |
+|---------|----------|---------------|------|-------------|----------------|
+| Bow (plan bonus) | 4 | 0 | 10 | 5 | 7 |
+| Bow (linear) | 4 | 0 | 10 | 5 | 7 |
+| Dense (plan bonus) | 2 | 1 | 11 | 2 | 6 |
+| Dense (linear) | 2 | 1 | 11 | 2 | 6 |
+
+**Conclusion:** Plan-structure bonus produced no regression on Bow and no change on Dense. It did not improve the roadmap outcome on dense because the gold useful candidate does not contain the current bucketed cues. Success criteria (roadmap stable Psi0 win on both backends, dense useful +1 without redundant +1) were not met. The bonus is active and unit-tested; next step could be to extend bucket cues so planning-shaped useful notes (e.g. “investments”, “missing”, “concrete”) are rewarded, or to keep the change as a harmless nudge and iterate on cue design later.
+
+### Tokenization fix (rerun)
+
+Cue sets were originally raw strings (e.g. `depends`, `requires`, `blocked`), while candidates are matched using `tokenize()`, which stems (e.g. `depends` → `depend`, `blocked` → `block`). That caused dependency/blocker cues to rarely match. **Fix:** build all plan-bonus cue sets via `_normalized_cue_set(words)` so they contain the same normalized tokens as `tokenize()` output. Reran Bow and Dense with the fix.
+
+- **Bow:** psi0=4, baseline=0, tie=10; useful 5, redundant 7. Unchanged vs pre-fix (no regression).
+- **Dense:** psi0=2, baseline=1, tie=11; useful 2, redundant 6. Unchanged; `realistic_roadmap_planning` still baseline win (gold candidate has no sequencing/dependency/risk tokens, so S_plan=0 for it). The fix ensures cues like “depends”/“requires” are now detected when present; the roadmap gold text still does not contain them, so outcome unchanged.
+
+### P2 guard + planning trigger (rerun)
+
+Two fixes applied: (a) **Guard:** plan bonus is applied only when `v_base > 0`, so candidates with zero goal overlap no longer receive value purely from plan-structure cues. (b) **Planning trigger:** "planning" added to the goal trigger list so that tokenize("planning") yields "plann" and goals like "Select planning notes for …" activate the bonus. Reran full suite (40 passed), Bow and Dense benchmarks.
+
+- **Bow:** psi0=4, baseline=0, tie=10; useful 5, redundant 7. Unchanged (no regression).
+- **Dense:** psi0=2, baseline=1, tie=11; useful 2, redundant 6. Unchanged; `realistic_roadmap_planning` still baseline win. Roadmap outcome unchanged.

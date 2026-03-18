@@ -99,3 +99,13 @@ def test_roadmap_baseline_win_matches_published_dense_outcome():
     assert report.baseline.selected[0].candidate.id == "novel_data_contracts"
     assert report.psi0.selected[0].candidate.id == "unrelated_visual_refresh"
     assert task_result["winner"] == "baseline"
+
+
+def test_roadmap_task_forensics_with_default_embedder_exercises_plan_bonus():
+    """Run realistic_roadmap_planning with default (Bow) embedder to exercise planning-bonus code path."""
+    source = FixtureSource(Path(__file__).parent / "fixtures" / "benchmark_tasks.json")
+    task = source.get_task("realistic_roadmap_planning")
+    report = build_task_forensics(task, top_k=3)
+    assert len(report.psi0.selected) >= 1
+    assert len(report.baseline.selected) >= 1
+    assert report.task_id == "realistic_roadmap_planning"
