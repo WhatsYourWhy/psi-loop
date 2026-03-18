@@ -84,11 +84,11 @@
       ],
       "psi0": {
         "selected_ids": [
-          "redundant_blocking_window"
+          "unrelated_cleanup"
         ],
-        "selected_token_total": 8,
+        "selected_token_total": 6,
         "useful_hits": 0,
-        "redundant_hits": 1,
+        "redundant_hits": 0,
         "useful_precision": 0.0
       },
       "baseline": {
@@ -107,8 +107,8 @@
       "goal": "Design a safer feature flag rollout for the new checkout flow.",
       "notes": "A progressive rollout is the novel safety lever; the global rollout note repeats the current plan.",
       "expected_winner": "psi0",
-      "winner": "tie",
-      "expected_match": false,
+      "winner": "psi0",
+      "expected_match": true,
       "gold_useful_candidates": [
         "novel_progressive_rollout"
       ],
@@ -117,12 +117,12 @@
       ],
       "psi0": {
         "selected_ids": [
-          "redundant_global_rollout"
+          "novel_progressive_rollout"
         ],
         "selected_token_total": 8,
-        "useful_hits": 0,
-        "redundant_hits": 1,
-        "useful_precision": 0.0
+        "useful_hits": 1,
+        "redundant_hits": 0,
+        "useful_precision": 1.0
       },
       "baseline": {
         "selected_ids": [
@@ -272,8 +272,8 @@
       "goal": "Improve webhook delivery reliability for third-party integrations.",
       "notes": "The useful candidate introduces recovery behavior instead of repeating the current retry count.",
       "expected_winner": "psi0",
-      "winner": "tie",
-      "expected_match": false,
+      "winner": "psi0",
+      "expected_match": true,
       "gold_useful_candidates": [
         "novel_dead_letter_queue"
       ],
@@ -282,12 +282,12 @@
       ],
       "psi0": {
         "selected_ids": [
-          "redundant_three_retries"
+          "novel_dead_letter_queue"
         ],
-        "selected_token_total": 9,
-        "useful_hits": 0,
-        "redundant_hits": 1,
-        "useful_precision": 0.0
+        "selected_token_total": 8,
+        "useful_hits": 1,
+        "redundant_hits": 0,
+        "useful_precision": 1.0
       },
       "baseline": {
         "selected_ids": [
@@ -404,8 +404,8 @@
       "goal": "Prepare review notes for a pull request improving background job safety.",
       "notes": "The useful context adds a new failure mode instead of echoing the already-observed retry behavior.",
       "expected_winner": "psi0",
-      "winner": "psi0",
-      "expected_match": true,
+      "winner": "tie",
+      "expected_match": false,
       "gold_useful_candidates": [
         "novel_idempotency_risk"
       ],
@@ -414,12 +414,12 @@
       ],
       "psi0": {
         "selected_ids": [
-          "novel_idempotency_risk"
+          "redundant_fixed_delay_review"
         ],
-        "selected_token_total": 10,
-        "useful_hits": 1,
-        "redundant_hits": 0,
-        "useful_precision": 1.0
+        "selected_token_total": 8,
+        "useful_hits": 0,
+        "redundant_hits": 1,
+        "useful_precision": 0.0
       },
       "baseline": {
         "selected_ids": [
@@ -468,30 +468,30 @@
   "aggregate": {
     "total_tasks": 14,
     "wins": {
-      "psi0": 3,
+      "psi0": 4,
       "baseline": 0,
-      "tie": 11
+      "tie": 10
     },
     "per_category": {
       "synthetic_redundancy": {
-        "psi0": 1,
+        "psi0": 3,
         "baseline": 0,
-        "tie": 9,
+        "tie": 7,
         "tasks": 10
       },
       "realistic_knowledge_work": {
-        "psi0": 2,
+        "psi0": 1,
         "baseline": 0,
-        "tie": 2,
+        "tie": 3,
         "tasks": 4
       }
     },
-    "psi0_useful_hits": 4,
+    "psi0_useful_hits": 5,
     "baseline_useful_hits": 1,
-    "psi0_redundant_hits": 9,
+    "psi0_redundant_hits": 7,
     "baseline_redundant_hits": 12,
-    "expected_match_count": 3,
-    "psi0_win_rate": 0.21428571428571427,
+    "expected_match_count": 4,
+    "psi0_win_rate": 0.2857142857142857,
     "decision": "refine_v"
   }
 }
