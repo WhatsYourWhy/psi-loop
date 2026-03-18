@@ -149,6 +149,34 @@ def test_psi0_score_is_value_times_surprise():
     assert round(score, 6) == round(value * surprise, 6)
 
 
+def test_planning_bonus_activates_for_planning_goal_with_cues():
+    """Planning-shaped goal + candidate with sequencing/dependency/risk cues yields V_prime > V_base."""
+    goal = "Select the best notes for a roadmap discussion on analytics reliability."
+    candidate_with_cues = "First phase: validate schema. Then milestone. Depends on migration timeline."
+    v_base = keyword_overlap(candidate_with_cues, goal)
+    _, value_prime, _ = psi_0(
+        candidate_with_cues,
+        goal,
+        ["current context"],
+        embedder=FakeDenseEmbedder({candidate_with_cues: (0.5, 0.5), "current context": (0.0, 1.0)}),
+    )
+    assert value_prime > v_base
+
+
+def test_non_planning_goal_unchanged_value():
+    """Non-planning goal: value from psi_0 equals keyword_overlap (no bonus)."""
+    goal = "Improve API retry handling for transient failures and rate limits."
+    candidate = "Use exponential backoff with jitter for retries."
+    v_base = keyword_overlap(candidate, goal)
+    _, value_prime, _ = psi_0(
+        candidate,
+        goal,
+        ["Current client retries with fixed delay."],
+        embedder=FakeDenseEmbedder({candidate: (0.3, 0.7), "Current client retries with fixed delay.": (0.9, 0.1)}),
+    )
+    assert round(value_prime, 6) == round(v_base, 6)
+
+
 def test_deterministic_dense_embedder_can_drive_psi0():
     embedder = DeterministicDenseEmbedder()
 
