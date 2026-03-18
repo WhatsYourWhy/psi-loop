@@ -160,11 +160,20 @@ def build_task_forensics(
     )
 
 
-def _format_candidate(item: ScoredCandidate | None) -> str:
+def _format_candidate(
+    item: ScoredCandidate | None,
+    gold_useful: frozenset[str] | None = None,
+    gold_redundant: frozenset[str] | None = None,
+) -> str:
     if item is None:
         return "-"
+    label = ""
+    if gold_useful and item.candidate.id in gold_useful:
+        label = " [gold useful]"
+    elif gold_redundant and item.candidate.id in gold_redundant:
+        label = " [gold redundant]"
     return (
-        f"{item.candidate.id} "
+        f"{item.candidate.id}{label} "
         f"score={item.score:.4f} "
         f"value={item.value:.4f} "
         f"surprise={item.surprise:.4f} "
@@ -182,8 +191,80 @@ def _format_stats(name: str, stats: ContributionStats) -> str:
     )
 
 
+def _diagnosis_block(report: TaskForensics) -> str:
+    """One-line summary and diagnosis: Psi0 vs baseline rank-1, gold position, and error type."""
+    lines: list[str] = []
+    psi0_r1 = report.psi0.ranked[0] if report.psi0.ranked else None
+    baseline_r1 = report.baseline.ranked[0] if report.baseline.ranked else None
+    if psi0_r1:
+        lines.append(
+            f"Psi0 rank-1: {psi0_r1.candidate.id} "
+            f"value={psi0_r1.value:.4f} surprise={psi0_r1.surprise:.4f}"
+        )
+    if baseline_r1:
+        lines.append(
+            f"Baseline rank-1: {baseline_r1.candidate.id} "
+            f"value={baseline_r1.value:.4f} surprise={baseline_r1.surprise:.4f}"
+        )
+    gold_useful_set = set(report.gold_useful_candidates)
+    for gold_id in report.gold_useful_candidates:
+        psi0_rank = next(
+            (i + 1 for i, sc in enumerate(report.psi0.ranked) if sc.candidate.id == gold_id),
+            None,
+        )
+        baseline_rank = next(
+            (i + 1 for i, sc in enumerate(report.baseline.ranked) if sc.candidate.id == gold_id),
+            None,
+        )
+        if psi0_rank is not None:
+            sc = report.psi0.ranked[psi0_rank - 1]
+            lines.append(
+                f"Gold useful {gold_id} in Psi0: rank={psi0_rank} "
+                f"value={sc.value:.4f} surprise={sc.surprise:.4f}"
+            )
+        else:
+            lines.append(f"Gold useful {gold_id} in Psi0: not in ranked list")
+        if baseline_rank is not None:
+            sc = report.baseline.ranked[baseline_rank - 1]
+            lines.append(
+                f"Gold useful {gold_id} in baseline: rank={baseline_rank} "
+                f"value={sc.value:.4f} surprise={sc.surprise:.4f}"
+            )
+        else:
+            lines.append(f"Gold useful {gold_id} in baseline: not in ranked list")
+
+    # Diagnosis: Low V on gold | High H on Psi0 winner | Budget | Other
+    diagnosis = "Other"
+    if report.psi0.selected and report.baseline.selected:
+        psi0_selected_ids = {sc.candidate.id for sc in report.psi0.selected}
+        baseline_selected_ids = {sc.candidate.id for sc in report.baseline.selected}
+        gold_in_psi0_selected = bool(gold_useful_set & psi0_selected_ids)
+        gold_in_baseline_selected = bool(gold_useful_set & baseline_selected_ids)
+        psi0_trace_by_id = {item.candidate.candidate.id: item for item in report.psi0.budget_trace}
+        for gold_id in report.gold_useful_candidates:
+            if gold_id in psi0_trace_by_id:
+                reason = psi0_trace_by_id[gold_id].reason
+                if reason in ("too_large", "would_exceed_budget") and not gold_in_psi0_selected:
+                    diagnosis = "Budget"
+                    break
+        if diagnosis == "Other" and not gold_in_psi0_selected and psi0_r1 and gold_useful_set:
+            gold_sc = next(
+                (sc for sc in report.psi0.ranked if sc.candidate.id in gold_useful_set),
+                None,
+            )
+            if gold_sc and psi0_r1.value <= gold_sc.value and psi0_r1.surprise > gold_sc.surprise:
+                diagnosis = "High H on Psi0 winner"
+            elif gold_sc and gold_sc.value < psi0_r1.value:
+                diagnosis = "Low V on gold"
+    lines.append(f"Diagnosis: {diagnosis}")
+    return "\n".join(lines)
+
+
 def render_task_forensics(report: TaskForensics, top_k: int) -> str:
     """Render a plain-text forensic report for one task."""
+
+    gold_useful = frozenset(report.gold_useful_candidates)
+    gold_redundant = frozenset(report.gold_redundant_candidates)
 
     lines = [
         f"Task forensic: {report.task_id}",
@@ -203,14 +284,20 @@ def render_task_forensics(report: TaskForensics, top_k: int) -> str:
         baseline_item = report.baseline.ranked[index] if index < len(report.baseline.ranked) else None
         psi0_item = report.psi0.ranked[index] if index < len(report.psi0.ranked) else None
         lines.append(
-            f"{index + 1} | {_format_candidate(baseline_item)} | {_format_candidate(psi0_item)}"
+            f"{index + 1} | {_format_candidate(baseline_item, gold_useful, gold_redundant)} | "
+            f"{_format_candidate(psi0_item, gold_useful, gold_redundant)}"
         )
 
     for selector in (report.baseline, report.psi0):
         lines.append(f"{selector.name} budget trace:")
         for item in selector.budget_trace:
+            label = ""
+            if item.candidate.candidate.id in gold_useful:
+                label = " [gold useful]"
+            elif item.candidate.candidate.id in gold_redundant:
+                label = " [gold redundant]"
             lines.append(
-                f"- {item.candidate.candidate.id}: reason={item.reason} "
+                f"- {item.candidate.candidate.id}{label}: reason={item.reason} "
                 f"score={item.candidate.score:.4f} "
                 f"value={item.candidate.value:.4f} "
                 f"surprise={item.candidate.surprise:.4f} "
@@ -224,4 +311,6 @@ def render_task_forensics(report: TaskForensics, top_k: int) -> str:
         lines.append(_format_stats(f"{selector.name} top-{top_k}", selector.ranked_stats))
         lines.append(_format_stats(f"{selector.name} selected", selector.selected_stats))
 
+    lines.append("")
+    lines.append(_diagnosis_block(report))
     return "\n".join(lines)

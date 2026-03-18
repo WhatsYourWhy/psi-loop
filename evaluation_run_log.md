@@ -283,3 +283,22 @@ PYTHONPATH=src python scripts/run_baseline_vs_psi0.py --backend dense --json-out
 | Dense (relation bonus) | 2 | 1 | 11 | 2 | 6 |
 
 **Conclusion:** No regression on Bow; dense roadmap outcome unchanged. Relation-aware bucket is active and unit-tested; next steps could include a larger α for the relation bucket only, or additional relational cues, while staying in narrow hypothesis-testing mode.
+
+---
+
+## 2025-03-17 — Dense roadmap forensic
+
+Task-specific forensic on `realistic_roadmap_planning` with dense embedder (all-MiniLM-L6-v2) to diagnose why Psi0 selects `unrelated_visual_refresh` instead of gold `novel_data_contracts`.
+
+**Summary:**
+
+- **Psi0 rank-1:** unrelated_visual_refresh — value=0.3077, surprise=0.7553 (selected; 5 tokens).
+- **Baseline rank-1:** novel_data_contracts [gold useful] — value=0.5383, surprise=0.0000 (selected; 9 tokens).
+- **Gold useful (novel_data_contracts) in Psi0:** rank=2, value=0.4146, surprise=0.5588. Gold has higher V than Psi0 rank-1 (0.4146 vs 0.3077) but lower score (0.2317 vs 0.2324) because Psi0 rank-1 has much higher surprise (0.7553 vs 0.5588).
+- **Gold in baseline:** rank=1, selected.
+
+**Diagnosis:** Budget. Psi0 selected the high-surprise candidate first; the gold candidate then did not fit in the remaining token budget (would_exceed_budget). The underlying cause is ranking: Psi0 ranked unrelated_visual_refresh above novel_data_contracts (score 0.2324 vs 0.2317), so the failure is a combination of high H on the Psi0 winner and budget crowd-out once that candidate is chosen.
+
+**Artifact:** `evaluation_forensic_realistic_roadmap_planning_dense.txt` (full report with gold labels and diagnosis block).
+
+**Tooling:** Forensic report now includes gold useful/redundant labels in the ranked table and budget trace, and a diagnosis block (Psi0 rank-1, baseline rank-1, gold position in each ranking, and Diagnosis line). Script `scripts/inspect_task_forensics.py` accepts `--out` to write the report to a file.
