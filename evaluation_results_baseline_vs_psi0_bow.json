@@ -112,8 +112,8 @@
       "goal": "Design a safer feature flag rollout for the new checkout flow.",
       "notes": "A progressive rollout is the novel safety lever; the global rollout note repeats the current plan.",
       "expected_winner": "psi0",
-      "winner": "psi0",
-      "expected_match": true,
+      "winner": "tie",
+      "expected_match": false,
       "gold_useful_candidates": [
         "novel_progressive_rollout"
       ],
@@ -122,12 +122,12 @@
       ],
       "psi0": {
         "selected_ids": [
-          "novel_progressive_rollout"
+          "redundant_global_rollout"
         ],
         "selected_token_total": 8,
-        "useful_hits": 1,
-        "redundant_hits": 0,
-        "useful_precision": 1.0
+        "useful_hits": 0,
+        "redundant_hits": 1,
+        "useful_precision": 0.0
       },
       "baseline": {
         "selected_ids": [
@@ -155,11 +155,11 @@
       ],
       "psi0": {
         "selected_ids": [
-          "unrelated_incident_tags"
+          "redundant_restart_step"
         ],
-        "selected_token_total": 4,
+        "selected_token_total": 9,
         "useful_hits": 0,
-        "redundant_hits": 0,
+        "redundant_hits": 1,
         "useful_precision": 0.0
       },
       "baseline": {
@@ -277,8 +277,8 @@
       "goal": "Improve webhook delivery reliability for third-party integrations.",
       "notes": "The useful candidate introduces recovery behavior instead of repeating the current retry count.",
       "expected_winner": "psi0",
-      "winner": "psi0",
-      "expected_match": true,
+      "winner": "tie",
+      "expected_match": false,
       "gold_useful_candidates": [
         "novel_dead_letter_queue"
       ],
@@ -287,12 +287,12 @@
       ],
       "psi0": {
         "selected_ids": [
-          "novel_dead_letter_queue"
+          "redundant_three_retries"
         ],
-        "selected_token_total": 8,
-        "useful_hits": 1,
-        "redundant_hits": 0,
-        "useful_precision": 1.0
+        "selected_token_total": 9,
+        "useful_hits": 0,
+        "redundant_hits": 1,
+        "useful_precision": 0.0
       },
       "baseline": {
         "selected_ids": [
@@ -473,15 +473,15 @@
   "aggregate": {
     "total_tasks": 14,
     "wins": {
-      "psi0": 4,
+      "psi0": 2,
       "baseline": 0,
-      "tie": 10
+      "tie": 12
     },
     "per_category": {
       "synthetic_redundancy": {
-        "psi0": 3,
+        "psi0": 1,
         "baseline": 0,
-        "tie": 7,
+        "tie": 9,
         "tasks": 10
       },
       "realistic_knowledge_work": {
@@ -491,12 +491,12 @@
         "tasks": 4
       }
     },
-    "psi0_useful_hits": 5,
+    "psi0_useful_hits": 3,
     "baseline_useful_hits": 1,
-    "psi0_redundant_hits": 7,
+    "psi0_redundant_hits": 10,
     "baseline_redundant_hits": 12,
-    "expected_match_count": 4,
-    "psi0_win_rate": 0.2857142857142857,
+    "expected_match_count": 2,
+    "psi0_win_rate": 0.14285714285714285,
     "decision": "refine_v"
   }
 }

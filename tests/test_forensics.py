@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from psi_loop.embedders import Embedder
 from psi_loop.forensics import build_task_forensics, render_task_forensics, trace_budget
 from psi_loop.models import Candidate, ScoredCandidate
 from psi_loop.sources import FixtureSource
@@ -56,3 +57,39 @@ def test_render_task_forensics_includes_gold_labels_and_stats():
     assert "rank | baseline | psi0" in rendered
     assert "baseline top-2:" in rendered
     assert "psi0 selected:" in rendered
+
+
+class RoadmapDenseEmbedder(Embedder):
+    def __init__(self, vectors: dict[str, tuple[float, ...]]):
+        self.vectors = vectors
+
+    def embed(self, text: str) -> tuple[float, ...]:
+        return self.vectors[text]
+
+
+def test_soft_v_gate_keeps_useful_roadmap_candidate_ahead_of_unrelated_one():
+    source = FixtureSource(Path(__file__).parent / "fixtures" / "benchmark_tasks.json")
+    task = source.get_task("realistic_roadmap_planning")
+    context = task.current_context[0]
+    embedder = RoadmapDenseEmbedder(
+        {
+            task.goal: (1.0, 0.0),
+            context: (1.0, 0.0),
+            "Roadmap notes should say dashboards are flaky because upstream jobs fail silently.": (
+                0.95,
+                0.05,
+            ),
+            "Data contracts and freshness alerts are the concrete reliability investments missing from the roadmap.": (
+                0.0,
+                1.0,
+            ),
+            "Refresh chart colors for the analytics interface.": (-1.0, 0.0),
+        }
+    )
+
+    report = build_task_forensics(task, embedder=embedder, top_k=3)
+
+    assert report.psi0.ranked[0].candidate.id == "novel_data_contracts"
+    assert report.psi0.ranked[1].candidate.id == "unrelated_visual_refresh"
+    assert report.psi0.ranked[0].score > report.psi0.ranked[1].score
+    assert report.psi0.selected[0].candidate.id == "novel_data_contracts"

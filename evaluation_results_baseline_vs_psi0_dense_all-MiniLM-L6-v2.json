@@ -188,11 +188,11 @@
       ],
       "psi0": {
         "selected_ids": [
-          "unrelated_csv_sorting"
+          "redundant_exact_email"
         ],
-        "selected_token_total": 7,
+        "selected_token_total": 10,
         "useful_hits": 0,
-        "redundant_hits": 0,
+        "redundant_hits": 1,
         "useful_precision": 0.0
       },
       "baseline": {
@@ -287,11 +287,11 @@
       ],
       "psi0": {
         "selected_ids": [
-          "unrelated_console"
+          "redundant_three_retries"
         ],
-        "selected_token_total": 5,
+        "selected_token_total": 9,
         "useful_hits": 0,
-        "redundant_hits": 0,
+        "redundant_hits": 1,
         "useful_precision": 0.0
       },
       "baseline": {
@@ -442,7 +442,7 @@
       "goal": "Select the best notes for a roadmap discussion on analytics reliability.",
       "notes": "The realistic planning task needs actionable investments, not another restatement of the known symptom.",
       "expected_winner": "psi0",
-      "winner": "baseline",
+      "winner": "tie",
       "expected_match": false,
       "gold_useful_candidates": [
         "novel_data_contracts"
@@ -452,12 +452,12 @@
       ],
       "psi0": {
         "selected_ids": [
-          "unrelated_visual_refresh"
+          "novel_data_contracts"
         ],
-        "selected_token_total": 5,
-        "useful_hits": 0,
+        "selected_token_total": 9,
+        "useful_hits": 1,
         "redundant_hits": 0,
-        "useful_precision": 0.0
+        "useful_precision": 1.0
       },
       "baseline": {
         "selected_ids": [
@@ -474,8 +474,8 @@
     "total_tasks": 14,
     "wins": {
       "psi0": 2,
-      "baseline": 1,
-      "tie": 11
+      "baseline": 0,
+      "tie": 12
     },
     "per_category": {
       "synthetic_redundancy": {
@@ -486,14 +486,14 @@
       },
       "realistic_knowledge_work": {
         "psi0": 0,
-        "baseline": 1,
-        "tie": 3,
+        "baseline": 0,
+        "tie": 4,
         "tasks": 4
       }
     },
-    "psi0_useful_hits": 2,
+    "psi0_useful_hits": 3,
     "baseline_useful_hits": 1,
-    "psi0_redundant_hits": 6,
+    "psi0_redundant_hits": 8,
     "baseline_redundant_hits": 13,
     "expected_match_count": 2,
     "psi0_win_rate": 0.14285714285714285,
