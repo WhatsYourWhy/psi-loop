@@ -1,0 +1,36 @@
+Task forensic: realistic_roadmap_planning
+Goal: Select the best notes for a roadmap discussion on analytics reliability.
+Budget: 11 tokens
+Current context:
+- The current roadmap context already says dashboards are flaky because upstream jobs fail silently.
+Gold useful candidates:
+- novel_data_contracts
+Gold redundant candidates:
+- redundant_flaky_dashboards
+Top-ranked candidates (baseline vs psi0):
+rank | baseline | psi0
+1 | novel_data_contracts [gold useful] score=0.5383 value=0.5383 surprise=0.0000 tokens=9 | unrelated_visual_refresh score=0.2324 value=0.3077 surprise=0.7553 tokens=5
+2 | redundant_flaky_dashboards [gold redundant] score=0.4831 value=0.4831 surprise=0.0000 tokens=11 | novel_data_contracts [gold useful] score=0.2317 value=0.4146 surprise=0.5588 tokens=9
+3 | unrelated_visual_refresh score=0.3909 value=0.3909 surprise=0.0000 tokens=5 | redundant_flaky_dashboards [gold redundant] score=0.0053 value=0.1538 surprise=0.0347 tokens=11
+4 | - | -
+5 | - | -
+baseline budget trace:
+- novel_data_contracts [gold useful]: reason=selected score=0.5383 value=0.5383 surprise=0.0000 tokens=9 budget=0->9
+- redundant_flaky_dashboards [gold redundant]: reason=would_exceed_budget score=0.4831 value=0.4831 surprise=0.0000 tokens=11 budget=9->9
+- unrelated_visual_refresh: reason=would_exceed_budget score=0.3909 value=0.3909 surprise=0.0000 tokens=5 budget=9->9
+baseline selected ids: ['novel_data_contracts']
+baseline top-5: count=3 mean_score=0.4708 mean_value=0.4708 mean_surprise=0.0000
+baseline selected: count=1 mean_score=0.5383 mean_value=0.5383 mean_surprise=0.0000
+psi0 budget trace:
+- unrelated_visual_refresh: reason=selected score=0.2324 value=0.3077 surprise=0.7553 tokens=5 budget=0->5
+- novel_data_contracts [gold useful]: reason=would_exceed_budget score=0.2317 value=0.4146 surprise=0.5588 tokens=9 budget=5->5
+- redundant_flaky_dashboards [gold redundant]: reason=would_exceed_budget score=0.0053 value=0.1538 surprise=0.0347 tokens=11 budget=5->5
+psi0 selected ids: ['unrelated_visual_refresh']
+psi0 top-5: count=3 mean_score=0.1565 mean_value=0.2921 mean_surprise=0.4496
+psi0 selected: count=1 mean_score=0.2324 mean_value=0.3077 mean_surprise=0.7553
+
+Psi0 rank-1: unrelated_visual_refresh value=0.3077 surprise=0.7553
+Baseline rank-1: novel_data_contracts value=0.5383 surprise=0.0000
+Gold useful novel_data_contracts in Psi0: rank=2 value=0.4146 surprise=0.5588
+Gold useful novel_data_contracts in baseline: rank=1 value=0.5383 surprise=0.0000
+Diagnosis: Budget

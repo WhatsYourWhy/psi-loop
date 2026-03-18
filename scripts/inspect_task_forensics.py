@@ -40,6 +40,12 @@ def build_parser() -> argparse.ArgumentParser:
         default=3,
         help="Number of ranked candidates to print per selector.",
     )
+    parser.add_argument(
+        "--out",
+        type=Path,
+        default=None,
+        help="Write the forensic report to this path (also prints to stdout).",
+    )
     return parser
 
 
@@ -55,7 +61,10 @@ def main() -> int:
         embedder = BowEmbedder()
 
     report = build_task_forensics(task, embedder=embedder, top_k=args.top_k)
-    print(render_task_forensics(report, top_k=args.top_k))
+    rendered = render_task_forensics(report, top_k=args.top_k)
+    print(rendered)
+    if args.out is not None:
+        args.out.write_text(rendered, encoding="utf-8")
     return 0
 
 
