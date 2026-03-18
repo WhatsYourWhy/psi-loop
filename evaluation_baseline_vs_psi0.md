@@ -86,7 +86,7 @@ What got worse:
 - `Psi0` wins dropped: `4 -> 2`
 - useful hits dropped: `5 -> 2`
 - expected-winner matches dropped: `4 -> 2`
-- dense introduced one outright baseline win
+- dense introduced one outright baseline win (realistic_roadmap_planning)
 - ties increased: `10 -> 11`
 
 This means the current limitation is not simply that bag-of-words geometry is too weak. Better representation alone still did not unlock the existing `Psi0` logic on the frozen benchmark.
