@@ -98,6 +98,8 @@ Outcome matches `evaluation_baseline_vs_psi0.md` and the committed JSON artifact
 
 **Change:** Psi0 scoring updated from linear `V × H` to **tempered surprise** `score = V × sqrt(H)`. Same fixture, same reporting. One variable only.
 
+**Replay not reproducible on this branch:** `scripts/run_baseline_vs_psi0.py` has no scoring-mode flag and always uses linear psi_0 (V×H). Rerunning the script with `--json-out ..._tempered_h.json` would produce linear results, not tempered H, and would silently relabel them as tempered-H artifacts. Do not refresh tempered-H artifacts from this branch; the results in this section are from a prior run with tempered scoring enabled.
+
 ### Test suite
 
 ```
@@ -108,9 +110,7 @@ pytest -v
 
 ### Bow (tempered H)
 
-```
-PYTHONPATH=src python scripts/run_baseline_vs_psi0.py --backend bow --json-out evaluation_results_baseline_vs_psi0_bow_tempered_h.json
-```
+*(Replay not supported — script has no scoring-mode flag; running it would produce linear results. Tempered-H results below are from a prior run.)*
 
 | Metric | Tempered H (this run) | Baseline (linear V×H) |
 |--------|------------------------|------------------------|
@@ -124,9 +124,7 @@ PYTHONPATH=src python scripts/run_baseline_vs_psi0.py --backend bow --json-out e
 
 ### Dense (tempered H)
 
-```
-PYTHONPATH=src python scripts/run_baseline_vs_psi0.py --backend dense --json-out evaluation_results_baseline_vs_psi0_dense_all-MiniLM-L6-v2_tempered_h.json
-```
+*(Replay not supported — script has no scoring-mode flag; running it would produce linear results. Tempered-H results below are from a prior run.)*
 
 | Metric | Tempered H (this run) | Baseline (linear V×H) |
 |--------|------------------------|------------------------|
