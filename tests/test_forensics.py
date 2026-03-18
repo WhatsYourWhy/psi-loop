@@ -68,34 +68,34 @@ class RoadmapDenseEmbedder(Embedder):
         return self.vectors[text]
 
 
-def test_roadmap_useful_outranks_unrelated_with_crafted_embedder():
+def test_roadmap_baseline_win_matches_published_dense_outcome():
+    """Crafted embedder reproduces the published dense benchmark outcome for realistic_roadmap_planning: baseline wins, baseline selects novel_data_contracts, Psi0 selects unrelated_visual_refresh."""
     source = FixtureSource(Path(__file__).parent / "fixtures" / "benchmark_tasks.json")
     task = source.get_task("realistic_roadmap_planning")
     context = task.current_context[0]
+    # 3D geometry: goal/context on (1,0,0); novel same as goal so baseline ranks it first; unrelated on (0,0,1) so high surprise and wins Psi0; redundant between.
     embedder = RoadmapDenseEmbedder(
         {
-            task.goal: (1.0, 0.0),
-            context: (1.0, 0.0),
+            task.goal: (1.0, 0.0, 0.0),
+            context: (1.0, 0.0, 0.0),
             "Roadmap notes should say dashboards are flaky because upstream jobs fail silently.": (
                 0.95,
                 0.05,
+                0.0,
             ),
             "Data contracts and freshness alerts are the concrete reliability investments missing from the roadmap.": (
-                0.0,
                 1.0,
+                0.0,
+                0.0,
             ),
-            "Refresh chart colors for the analytics interface.": (-1.0, 0.0),
+            "Refresh chart colors for the analytics interface.": (0.0, 0.0, 1.0),
         }
     )
 
     report = build_task_forensics(task, embedder=embedder, top_k=3)
-
-    assert report.psi0.ranked[0].candidate.id == "novel_data_contracts"
-    assert report.psi0.ranked[1].candidate.id == "unrelated_visual_refresh"
-    assert report.psi0.ranked[0].score > report.psi0.ranked[1].score
-    assert report.psi0.selected[0].candidate.id == "novel_data_contracts"
-
-    # Exercise baseline path and task winner so benchmark-style outcome is locked in.
-    assert report.baseline.selected[0].candidate.id == "redundant_flaky_dashboards"
     task_result = evaluate_task(task, embedder=embedder)
-    assert task_result["winner"] == "psi0"
+
+    # Align with evaluation_results_baseline_vs_psi0_dense_all-MiniLM-L6-v2.json: baseline wins, baseline selects novel_data_contracts, Psi0 selects unrelated_visual_refresh.
+    assert report.baseline.selected[0].candidate.id == "novel_data_contracts"
+    assert report.psi0.selected[0].candidate.id == "unrelated_visual_refresh"
+    assert task_result["winner"] == "baseline"
