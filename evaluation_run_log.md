@@ -216,3 +216,10 @@ Cue sets were originally raw strings (e.g. `depends`, `requires`, `blocked`), wh
 
 - **Bow:** psi0=4, baseline=0, tie=10; useful 5, redundant 7. Unchanged vs pre-fix (no regression).
 - **Dense:** psi0=2, baseline=1, tie=11; useful 2, redundant 6. Unchanged; `realistic_roadmap_planning` still baseline win (gold candidate has no sequencing/dependency/risk tokens, so S_plan=0 for it). The fix ensures cues like “depends”/“requires” are now detected when present; the roadmap gold text still does not contain them, so outcome unchanged.
+
+### P2 guard + planning trigger (rerun)
+
+Two fixes applied: (a) **Guard:** plan bonus is applied only when `v_base > 0`, so candidates with zero goal overlap no longer receive value purely from plan-structure cues. (b) **Planning trigger:** "planning" added to the goal trigger list so that tokenize("planning") yields "plann" and goals like "Select planning notes for …" activate the bonus. Reran full suite (40 passed), Bow and Dense benchmarks.
+
+- **Bow:** psi0=4, baseline=0, tie=10; useful 5, redundant 7. Unchanged (no regression).
+- **Dense:** psi0=2, baseline=1, tie=11; useful 2, redundant 6. Unchanged; `realistic_roadmap_planning` still baseline win. Roadmap outcome unchanged.

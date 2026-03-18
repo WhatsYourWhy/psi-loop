@@ -67,7 +67,7 @@ def _normalized_cue_set(words: Iterable[str]) -> set[str]:
 
 
 PLANNING_GOAL_TERMS = _normalized_cue_set(
-    ["plan", "roadmap", "rollout", "migration", "migrate", "timeline", "phase"]
+    ["plan", "planning", "roadmap", "rollout", "migration", "migrate", "timeline", "phase"]
 )
 PLAN_SEQUENCING_CUES = _normalized_cue_set(
     ["first", "then", "next", "phase", "step", "before", "after"]
@@ -103,10 +103,11 @@ def _plan_structure_score(candidate_text: str, goal: str) -> float:
 
 
 def _value_with_plan_bonus(candidate_text: str, goal: str) -> tuple[float, float]:
-    """V_base from keyword_overlap; V_prime = clamp(V_base + alpha * S_plan, 0, 1). Returns (V_prime, V_base)."""
+    """V_base from keyword_overlap; V_prime = clamp(V_base + alpha * S_plan, 0, 1). Bonus only when v_base > 0. Returns (V_prime, V_base)."""
     v_base = keyword_overlap(candidate_text, goal)
     s_plan = _plan_structure_score(candidate_text, goal)
-    v_prime = max(0.0, min(1.0, v_base + PLAN_BONUS_ALPHA * s_plan))
+    bonus = PLAN_BONUS_ALPHA * s_plan if v_base > 0.0 else 0.0
+    v_prime = max(0.0, min(1.0, v_base + bonus))
     return v_prime, v_base
 
 
