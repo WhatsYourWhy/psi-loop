@@ -1,5 +1,5 @@
 from psi_loop.embedders import Embedder, centroid, cosine_similarity_vectors
-from psi_loop.scoring import goal_similarity, keyword_overlap, psi_0, surprise_score
+from psi_loop.scoring import goal_similarity, goal_term_weight, keyword_overlap, psi_0, surprise_score
 
 
 class FakeDenseEmbedder(Embedder):
@@ -72,6 +72,19 @@ def test_surprise_score_accepts_injected_embedder():
     score = surprise_score("candidate", ["context_a", "context_b"], embedder=embedder)
 
     assert round(score, 3) == 0.293
+
+
+def test_surprise_score_clamps_negative_dense_cosine_to_one():
+    embedder = FakeDenseEmbedder(
+        {
+            "candidate": (-1.0, 0.0),
+            "context_a": (1.0, 0.0),
+        }
+    )
+
+    score = surprise_score("candidate", ["context_a"], embedder=embedder)
+
+    assert score == 1.0
 
 
 def test_goal_similarity_accepts_dense_embedder():

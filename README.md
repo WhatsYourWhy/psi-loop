@@ -66,7 +66,8 @@ pytest
 Run the benchmark evaluation:
 
 ```powershell
-python scripts/run_baseline_vs_psi0.py
+python scripts/run_baseline_vs_psi0.py --backend bow
+python scripts/run_baseline_vs_psi0.py --backend dense
 ```
 
 ## Public API
@@ -106,9 +107,10 @@ If you want to evaluate whether the project is doing anything useful yet, use th
 
 For the more formal benchmark path:
 
-1. Run `python scripts/run_baseline_vs_psi0.py`.
-2. Inspect `evaluation_results_baseline_vs_psi0.json` for structured task-level outputs.
-3. Read `evaluation_baseline_vs_psi0.md` for the scientist-style interpretation of the latest run.
+1. Run `python scripts/run_baseline_vs_psi0.py --backend bow` for the zero-dependency baseline comparison.
+2. Optionally install `python -m pip install -e .[dense]` and run `python scripts/run_baseline_vs_psi0.py --backend dense`.
+3. Inspect `evaluation_results_baseline_vs_psi0_bow.json` and `evaluation_results_baseline_vs_psi0_dense.json` for structured task-level outputs, including embedder metadata.
+4. Read `evaluation_baseline_vs_psi0.md` for the scientist-style interpretation of the latest run.
 
 The fastest way to learn the system is to tweak the fixture and rerun the CLI. That gives you immediate feedback on whether the ranking rule is behaving intuitively.
 
@@ -136,9 +138,9 @@ If you want to test the new protocol seam rather than just the demo:
 ## Current Limits
 
 - Tokenization and stemming are intentionally simple heuristics.
-- The default embedder is still bag-of-words, not a dense embedding backend.
+- The default embedder is still bag-of-words; the dense backend is optional and still under evaluation.
 - `FixtureSource` is a demo source, not a production retrieval layer.
-- The bundled fixture proves the concept on one narrow scenario, not a benchmark suite.
+- The bundled benchmark is still small and hand-authored, not yet a broad external validation set.
 
 ## Next Steps
 

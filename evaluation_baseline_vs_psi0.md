@@ -9,11 +9,12 @@ Does `Psi0` select better context than the similarity-only baseline under token 
 - Selector under test: `Psi0`
 - Baseline: similarity-only ranking
 - Benchmark fixture: `tests/fixtures/benchmark_tasks.json`
-- Bow runner: `python scripts/run_baseline_vs_psi0.py --backend bow --json-out evaluation_results_baseline_vs_psi0.json`
-- Dense runner: `python scripts/run_baseline_vs_psi0.py --backend dense --json-out evaluation_results_baseline_vs_psi0_dense.json`
-- Bow result artifact: `evaluation_results_baseline_vs_psi0.json`
+- Bow runner: `python scripts/run_baseline_vs_psi0.py --backend bow`
+- Dense runner: `python scripts/run_baseline_vs_psi0.py --backend dense`
+- Bow result artifact: `evaluation_results_baseline_vs_psi0_bow.json`
 - Dense result artifact: `evaluation_results_baseline_vs_psi0_dense.json`
-- Dense model: `sentence-transformers/all-MiniLM-L6-v2`
+- Dense model: `all-MiniLM-L6-v2`
+- Result metadata: each JSON artifact records `embedder_metadata.backend`, `embedder_metadata.class_name`, and `embedder_metadata.model_name`
 
 ## Benchmark Design
 
@@ -56,38 +57,39 @@ Aggregate metrics:
 
 | Backend | Psi0 wins | Baseline wins | Ties | Psi0 useful hits | Baseline useful hits | Psi0 redundant hits | Baseline redundant hits | Expected matches | Decision |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---|
-| `BowEmbedder` | 3 | 0 | 11 | 4 | 1 | 9 | 12 | 3 / 14 | `refine_v` |
-| `STEmbedder` | 2 | 0 | 12 | 3 | 1 | 6 | 13 | 2 / 14 | `refine_v` |
+| `BowEmbedder` | 4 | 0 | 10 | 5 | 1 | 7 | 12 | 4 / 14 | `refine_v` |
+| `STEmbedder` | 2 | 1 | 11 | 2 | 1 | 6 | 13 | 2 / 14 | `refine_v` |
 
 ### By category
 
 #### `BowEmbedder`
 
-- `synthetic_redundancy`: `Psi0` 1, baseline 0, tie 9
-- `realistic_knowledge_work`: `Psi0` 2, baseline 0, tie 2
+- `synthetic_redundancy`: `Psi0` 3, baseline 0, tie 7
+- `realistic_knowledge_work`: `Psi0` 1, baseline 0, tie 3
 
 #### `STEmbedder`
 
-- `synthetic_redundancy`: `Psi0` 1, baseline 0, tie 9
-- `realistic_knowledge_work`: `Psi0` 1, baseline 0, tie 3
+- `synthetic_redundancy`: `Psi0` 2, baseline 0, tie 8
+- `realistic_knowledge_work`: `Psi0` 0, baseline 1, tie 3
 
 ## Interpretation
 
-The dense backend did change behavior, but it did not strengthen the scientific conclusion.
+The dense backend still changed behavior, but the corrected run did not strengthen the scientific conclusion.
 
 What improved under dense embeddings:
 
-- `Psi0` selected fewer gold redundant candidates: `9 -> 6`
+- `Psi0` selected fewer gold redundant candidates: `7 -> 6`
 - the baseline selected even more redundant candidates than before: `12 -> 13`
 
 What got worse:
 
-- `Psi0` wins dropped: `3 -> 2`
-- useful hits dropped: `4 -> 3`
-- expected-winner matches dropped: `3 -> 2`
-- ties increased: `11 -> 12`
+- `Psi0` wins dropped: `4 -> 2`
+- useful hits dropped: `5 -> 2`
+- expected-winner matches dropped: `4 -> 2`
+- dense introduced one outright baseline win
+- ties increased: `10 -> 11`
 
-This means the current limitation is not simply that bag-of-words geometry is too weak. Better representation alone did not unlock the existing `Psi0` logic on the frozen benchmark.
+This means the current limitation is not simply that bag-of-words geometry is too weak. Better representation alone still did not unlock the existing `Psi0` logic on the frozen benchmark.
 
 The dominant failure pattern under dense embeddings was not “baseline beats `Psi0`.” The dominant pattern was:
 
@@ -131,6 +133,6 @@ Right now, the evidence does **not** justify claiming that better semantic geome
 python -m pip install -e .[dev]
 python -m pip install -e .[dense]
 pytest
-python scripts/run_baseline_vs_psi0.py --backend bow --json-out evaluation_results_baseline_vs_psi0.json
-python scripts/run_baseline_vs_psi0.py --backend dense --json-out evaluation_results_baseline_vs_psi0_dense.json
+python scripts/run_baseline_vs_psi0.py --backend bow
+python scripts/run_baseline_vs_psi0.py --backend dense
 ```

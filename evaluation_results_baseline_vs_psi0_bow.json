@@ -1,6 +1,11 @@
 {
   "fixture_path": "tests\\fixtures\\benchmark_tasks.json",
   "embedder": "BowEmbedder",
+  "embedder_metadata": {
+    "backend": "bow",
+    "class_name": "BowEmbedder",
+    "model_name": null
+  },
   "task_results": [
     {
       "id": "synthetic_retry_backoff",

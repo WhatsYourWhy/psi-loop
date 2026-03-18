@@ -1,6 +1,11 @@
 {
   "fixture_path": "tests\\fixtures\\benchmark_tasks.json",
   "embedder": "STEmbedder",
+  "embedder_metadata": {
+    "backend": "dense",
+    "class_name": "STEmbedder",
+    "model_name": "all-MiniLM-L6-v2"
+  },
   "task_results": [
     {
       "id": "synthetic_retry_backoff",
@@ -8,8 +13,8 @@
       "goal": "Improve API retry handling for transient failures and rate limits.",
       "notes": "Baseline should prefer the repeated fixed-delay phrasing while Psi0 should reward the more novel improvement.",
       "expected_winner": "psi0",
-      "winner": "tie",
-      "expected_match": false,
+      "winner": "psi0",
+      "expected_match": true,
       "gold_useful_candidates": [
         "novel_backoff_jitter"
       ],
@@ -18,12 +23,12 @@
       ],
       "psi0": {
         "selected_ids": [
-          "redundant_fixed_delay"
+          "novel_backoff_jitter"
         ],
-        "selected_token_total": 8,
-        "useful_hits": 0,
-        "redundant_hits": 1,
-        "useful_precision": 0.0
+        "selected_token_total": 9,
+        "useful_hits": 1,
+        "redundant_hits": 0,
+        "useful_precision": 1.0
       },
       "baseline": {
         "selected_ids": [
@@ -41,8 +46,8 @@
       "goal": "Improve cache invalidation strategy after product price updates.",
       "notes": "The task is framed around improvement, so repeating TTL-only should be penalized as redundant.",
       "expected_winner": "psi0",
-      "winner": "psi0",
-      "expected_match": true,
+      "winner": "tie",
+      "expected_match": false,
       "gold_useful_candidates": [
         "novel_event_invalidation"
       ],
@@ -51,12 +56,12 @@
       ],
       "psi0": {
         "selected_ids": [
-          "novel_event_invalidation"
+          "redundant_ttl_only"
         ],
-        "selected_token_total": 10,
-        "useful_hits": 1,
-        "redundant_hits": 0,
-        "useful_precision": 1.0
+        "selected_token_total": 9,
+        "useful_hits": 0,
+        "redundant_hits": 1,
+        "useful_precision": 0.0
       },
       "baseline": {
         "selected_ids": [
@@ -107,8 +112,8 @@
       "goal": "Design a safer feature flag rollout for the new checkout flow.",
       "notes": "A progressive rollout is the novel safety lever; the global rollout note repeats the current plan.",
       "expected_winner": "psi0",
-      "winner": "tie",
-      "expected_match": false,
+      "winner": "psi0",
+      "expected_match": true,
       "gold_useful_candidates": [
         "novel_progressive_rollout"
       ],
@@ -117,12 +122,12 @@
       ],
       "psi0": {
         "selected_ids": [
-          "redundant_global_rollout"
+          "novel_progressive_rollout"
         ],
         "selected_token_total": 8,
-        "useful_hits": 0,
-        "redundant_hits": 1,
-        "useful_precision": 0.0
+        "useful_hits": 1,
+        "redundant_hits": 0,
+        "useful_precision": 1.0
       },
       "baseline": {
         "selected_ids": [
@@ -216,11 +221,11 @@
       ],
       "psi0": {
         "selected_ids": [
-          "unrelated_pretty_print"
+          "redundant_seven_days"
         ],
-        "selected_token_total": 6,
+        "selected_token_total": 9,
         "useful_hits": 0,
-        "redundant_hits": 0,
+        "redundant_hits": 1,
         "useful_precision": 0.0
       },
       "baseline": {
@@ -282,11 +287,11 @@
       ],
       "psi0": {
         "selected_ids": [
-          "redundant_three_retries"
+          "unrelated_console"
         ],
-        "selected_token_total": 9,
+        "selected_token_total": 5,
         "useful_hits": 0,
-        "redundant_hits": 1,
+        "redundant_hits": 0,
         "useful_precision": 0.0
       },
       "baseline": {
@@ -404,8 +409,8 @@
       "goal": "Prepare review notes for a pull request improving background job safety.",
       "notes": "The useful context adds a new failure mode instead of echoing the already-observed retry behavior.",
       "expected_winner": "psi0",
-      "winner": "psi0",
-      "expected_match": true,
+      "winner": "tie",
+      "expected_match": false,
       "gold_useful_candidates": [
         "novel_idempotency_risk"
       ],
@@ -414,12 +419,12 @@
       ],
       "psi0": {
         "selected_ids": [
-          "novel_idempotency_risk"
+          "redundant_fixed_delay_review"
         ],
-        "selected_token_total": 10,
-        "useful_hits": 1,
-        "redundant_hits": 0,
-        "useful_precision": 1.0
+        "selected_token_total": 8,
+        "useful_hits": 0,
+        "redundant_hits": 1,
+        "useful_precision": 0.0
       },
       "baseline": {
         "selected_ids": [
@@ -437,7 +442,7 @@
       "goal": "Select the best notes for a roadmap discussion on analytics reliability.",
       "notes": "The realistic planning task needs actionable investments, not another restatement of the known symptom.",
       "expected_winner": "psi0",
-      "winner": "tie",
+      "winner": "baseline",
       "expected_match": false,
       "gold_useful_candidates": [
         "novel_data_contracts"
@@ -447,12 +452,12 @@
       ],
       "psi0": {
         "selected_ids": [
-          "novel_data_contracts"
+          "unrelated_visual_refresh"
         ],
-        "selected_token_total": 9,
-        "useful_hits": 1,
+        "selected_token_total": 5,
+        "useful_hits": 0,
         "redundant_hits": 0,
-        "useful_precision": 1.0
+        "useful_precision": 0.0
       },
       "baseline": {
         "selected_ids": [
@@ -469,24 +474,24 @@
     "total_tasks": 14,
     "wins": {
       "psi0": 2,
-      "baseline": 0,
-      "tie": 12
+      "baseline": 1,
+      "tie": 11
     },
     "per_category": {
       "synthetic_redundancy": {
-        "psi0": 1,
+        "psi0": 2,
         "baseline": 0,
-        "tie": 9,
+        "tie": 8,
         "tasks": 10
       },
       "realistic_knowledge_work": {
-        "psi0": 1,
-        "baseline": 0,
+        "psi0": 0,
+        "baseline": 1,
         "tie": 3,
         "tasks": 4
       }
     },
-    "psi0_useful_hits": 3,
+    "psi0_useful_hits": 2,
     "baseline_useful_hits": 1,
     "psi0_redundant_hits": 6,
     "baseline_redundant_hits": 13,

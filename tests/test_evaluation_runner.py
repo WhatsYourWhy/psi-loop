@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from psi_loop.embedders import Embedder
-from psi_loop.evaluation import run_benchmark
+from psi_loop.embedders import Embedder, STEmbedder
+from psi_loop.evaluation import describe_embedder, run_benchmark
 from psi_loop.sources import FixtureSource
 
 
@@ -43,4 +43,19 @@ def test_run_benchmark_accepts_non_default_embedder():
     results = run_benchmark(fixture, embedder=DeterministicDenseEmbedder())
 
     assert results["embedder"] == "DeterministicDenseEmbedder"
+    assert results["embedder_metadata"] == {
+        "backend": "custom",
+        "class_name": "DeterministicDenseEmbedder",
+        "model_name": None,
+    }
     assert results["aggregate"]["total_tasks"] == 14
+
+
+def test_describe_embedder_persists_dense_model_name():
+    metadata = describe_embedder(STEmbedder(model_name="sentence-transformers/all-MiniLM-L6-v2"))
+
+    assert metadata == {
+        "backend": "dense",
+        "class_name": "STEmbedder",
+        "model_name": "sentence-transformers/all-MiniLM-L6-v2",
+    }
