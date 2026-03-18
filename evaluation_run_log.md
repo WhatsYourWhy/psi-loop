@@ -4,7 +4,25 @@
 
 Full evaluation run: test suite, Bow benchmark, and Dense benchmark. Psi0 scoring: `score = value * surprise` (linear, no V²).
 
+### Prerequisites (fresh checkout)
+
+The repo uses a `src/` layout. To reproduce the logged results:
+
+- **Tests and Bow benchmark:** Install the package editable and dev dependencies so `psi_loop` is importable and pytest can collect tests. From repo root:
+  ```bash
+  python -m pip install -e .[dev]
+  ```
+  Alternatively set `PYTHONPATH=src` when running the commands below.
+- **Dense benchmark:** The dense backend requires the `[dense]` extra (`sentence-transformers`). Install before running the dense run:
+  ```bash
+  python -m pip install -e .[dense]
+  ```
+
+---
+
 ### Test suite
+
+From repo root (package installed editable or `PYTHONPATH=src` set):
 
 ```
 pytest -v
@@ -16,6 +34,8 @@ pytest -v
 ---
 
 ### Bow benchmark
+
+From repo root (package installed editable or `PYTHONPATH=src` set):
 
 ```
 PYTHONPATH=src python scripts/run_baseline_vs_psi0.py --backend bow
@@ -38,6 +58,8 @@ PYTHONPATH=src python scripts/run_baseline_vs_psi0.py --backend bow
 ---
 
 ### Dense benchmark
+
+Requires the `[dense]` extra (`pip install -e .[dense]`). From repo root:
 
 ```
 PYTHONPATH=src python scripts/run_baseline_vs_psi0.py --backend dense
