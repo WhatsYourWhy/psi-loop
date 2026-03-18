@@ -90,4 +90,4 @@ PYTHONPATH=src python scripts/run_baseline_vs_psi0.py --backend dense --json-out
 | BowEmbedder | 4 | 0 | 10 | 5 | 1 | 7 | 12 |
 | STEmbedder | 2 | 1 | 11 | 2 | 1 | 6 | 13 |
 
-Outcome matches `evaluation_baseline_vs_psi0.md` and the committed JSON artifacts (aggregate metrics; path serialization in JSON may differ on POSIX). No regeneration or doc updates required.
+Outcome matches `evaluation_baseline_vs_psi0.md` and the committed JSON artifacts (aggregate metrics; path serialization in JSON may differ on POSIX). **Note:** README and `evaluation_baseline_vs_psi0.md` still show benchmark commands that write to the default artifact paths; to avoid overwriting the reference artifacts when replaying, use the `--json-out` commands in this log.
