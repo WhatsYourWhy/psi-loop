@@ -80,3 +80,19 @@ def test_psiloop_fetches_from_source_when_candidates_are_not_provided():
     )
 
     assert result.ranked[0].candidate.id == "novel_backoff_jitter"
+
+
+def test_weighted_v_prefers_mechanism_candidate_over_generic_goal_shell():
+    candidates = [
+        Candidate(id="generic", text="Design Python API client logic", source="a"),
+        Candidate(id="mechanism", text="Use backoff jitter retry", source="b"),
+    ]
+
+    result = select_context(
+        candidates=candidates,
+        goal="Design Python API client retry logic with exponential backoff and jitter",
+        current_context=[],
+        max_tokens=10,
+    )
+
+    assert result.ranked[0].candidate.id == "mechanism"
