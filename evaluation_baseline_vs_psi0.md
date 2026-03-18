@@ -58,7 +58,7 @@ Aggregate metrics:
 | Backend | Psi0 wins | Baseline wins | Ties | Psi0 useful hits | Baseline useful hits | Psi0 redundant hits | Baseline redundant hits | Expected matches | Decision |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---|
 | `BowEmbedder` | 4 | 0 | 10 | 5 | 1 | 7 | 12 | 4 / 14 | `refine_v` |
-| `STEmbedder` | 2 | 1 | 11 | 2 | 1 | 6 | 13 | 2 / 14 | `refine_v` |
+| `STEmbedder` | 2 | 0 | 12 | 3 | 1 | 8 | 13 | 2 / 14 | `refine_v` |
 
 ### By category
 
@@ -70,24 +70,20 @@ Aggregate metrics:
 #### `STEmbedder`
 
 - `synthetic_redundancy`: `Psi0` 2, baseline 0, tie 8
-- `realistic_knowledge_work`: `Psi0` 0, baseline 1, tie 3
+- `realistic_knowledge_work`: `Psi0` 0, baseline 0, tie 4
 
 ## Interpretation
 
 The dense backend still changed behavior, but the corrected run did not strengthen the scientific conclusion.
 
-What improved under dense embeddings:
+What changed under dense embeddings:
 
-- `Psi0` selected fewer gold redundant candidates: `7 -> 6`
-- the baseline selected even more redundant candidates than before: `12 -> 13`
-
-What got worse:
-
+- the baseline selected more redundant candidates than Bow: `12 -> 13`
+- `Psi0` redundant hits increased: `7 -> 8`
 - `Psi0` wins dropped: `4 -> 2`
-- useful hits dropped: `5 -> 2`
+- `Psi0` useful hits dropped: `5 -> 3`
 - expected-winner matches dropped: `4 -> 2`
-- dense introduced one outright baseline win
-- ties increased: `10 -> 11`
+- ties increased: `10 -> 12` (no baseline wins; dense run is all Psi0 wins or ties)
 
 This means the current limitation is not simply that bag-of-words geometry is too weak. Better representation alone still did not unlock the existing `Psi0` logic on the frozen benchmark.
 
