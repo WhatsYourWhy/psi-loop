@@ -134,4 +134,4 @@ def psi_0(
 
     value = keyword_overlap(candidate_text, goal)
     surprise = surprise_score(candidate_text, current_context, embedder=embedder)
-    return (value * value) * surprise, value, surprise
+    return value * surprise, value, surprise

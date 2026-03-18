@@ -128,31 +128,7 @@ def test_psi0_accepts_injected_embedder_without_changing_value_signal():
     assert score == 0.0
 
 
-def test_psi0_soft_gate_suppresses_high_surprise_low_value_candidate():
-    candidate = "Refresh chart colors for the analytics interface."
-    goal = "Select the best notes for a roadmap discussion on analytics reliability."
-    embedder = FakeDenseEmbedder(
-        {
-            candidate: (1.0, 0.0),
-            "current_context": (0.0, 1.0),
-        }
-    )
-
-    score, value, surprise = psi_0(
-        candidate,
-        goal,
-        ["current_context"],
-        embedder=embedder,
-    )
-
-    expected = (value * value) * surprise
-    assert surprise > 0.5
-    assert value < 0.33
-    assert round(score, 6) == round(expected, 6)
-    assert score < value * surprise
-
-
-def test_psi0_uses_squared_value_times_surprise():
+def test_psi0_score_is_value_times_surprise():
     candidate = "Data contracts and freshness alerts improve roadmap reliability"
     goal = "Select the best notes for a roadmap discussion on analytics reliability."
     embedder = FakeDenseEmbedder(
@@ -169,8 +145,8 @@ def test_psi0_uses_squared_value_times_surprise():
         embedder=embedder,
     )
 
-    assert value > 0.33
-    assert round(score, 6) == round((value * value) * surprise, 6)
+    assert value > 0.0
+    assert round(score, 6) == round(value * surprise, 6)
 
 
 def test_deterministic_dense_embedder_can_drive_psi0():

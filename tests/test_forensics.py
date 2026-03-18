@@ -67,7 +67,7 @@ class RoadmapDenseEmbedder(Embedder):
         return self.vectors[text]
 
 
-def test_soft_v_gate_keeps_useful_roadmap_candidate_ahead_of_unrelated_one():
+def test_roadmap_useful_outranks_unrelated_with_crafted_embedder():
     source = FixtureSource(Path(__file__).parent / "fixtures" / "benchmark_tasks.json")
     task = source.get_task("realistic_roadmap_planning")
     context = task.current_context[0]
