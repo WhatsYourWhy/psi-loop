@@ -22,7 +22,7 @@ The repo uses a `src/` layout. To reproduce the logged results:
 
 ### Test suite
 
-From repo root (package installed editable or `PYTHONPATH=src` set):
+From repo root, ensure the package is importable: install editable with `pip install -e .[dev]` or set `PYTHONPATH=src` (see Prerequisites).
 
 ```
 pytest -v
@@ -35,10 +35,10 @@ pytest -v
 
 ### Bow benchmark
 
-From repo root (package installed editable or `PYTHONPATH=src` set):
+From repo root (package installed editable or `PYTHONPATH=src` set). Replay uses `--json-out` below so the checked-in reference artifact is not overwritten.
 
 ```
-PYTHONPATH=src python scripts/run_baseline_vs_psi0.py --backend bow
+PYTHONPATH=src python scripts/run_baseline_vs_psi0.py --backend bow --json-out evaluation_results_baseline_vs_psi0_bow_rerun.json
 ```
 
 - **Fixture:** tests/fixtures/benchmark_tasks.json
@@ -52,17 +52,17 @@ PYTHONPATH=src python scripts/run_baseline_vs_psi0.py --backend bow
 | Expected-match count | 4/14 |
 | Decision | refine_v |
 
-**Artifact:** `evaluation_results_baseline_vs_psi0_bow.json`  
-**Status:** Matches checked-in artifact.
+**Reference artifact:** `evaluation_results_baseline_vs_psi0_bow.json` (checked-in). Replay writes to `evaluation_results_baseline_vs_psi0_bow_rerun.json`.  
+**Status:** Aggregate metrics match the checked-in artifact. Byte-identical only on the same OS (e.g. Windows); on POSIX, `fixture_path` in the JSON uses forward slashes, so a rerun may diff in that field only.
 
 ---
 
 ### Dense benchmark
 
-Requires the `[dense]` extra (`pip install -e .[dense]`). From repo root:
+Requires the `[dense]` extra: `pip install -e .[dense]` (see Prerequisites). From repo root. Replay uses `--json-out` so the checked-in reference is not overwritten.
 
 ```
-PYTHONPATH=src python scripts/run_baseline_vs_psi0.py --backend dense
+PYTHONPATH=src python scripts/run_baseline_vs_psi0.py --backend dense --json-out evaluation_results_baseline_vs_psi0_dense_all-MiniLM-L6-v2_rerun.json
 ```
 
 - **Fixture:** tests/fixtures/benchmark_tasks.json
@@ -78,8 +78,8 @@ PYTHONPATH=src python scripts/run_baseline_vs_psi0.py --backend dense
 
 **Notable:** `realistic_roadmap_planning` — winner=baseline; Psi0 selected `unrelated_visual_refresh`, baseline selected `novel_data_contracts`.
 
-**Artifact:** `evaluation_results_baseline_vs_psi0_dense_all-MiniLM-L6-v2.json`  
-**Status:** Matches checked-in artifact.
+**Reference artifact:** `evaluation_results_baseline_vs_psi0_dense_all-MiniLM-L6-v2.json` (checked-in). Replay writes to `..._rerun.json`.  
+**Status:** Aggregate metrics match the checked-in artifact. Byte-identical only on the same OS; on POSIX, `fixture_path` may use forward slashes.
 
 ---
 
@@ -90,4 +90,4 @@ PYTHONPATH=src python scripts/run_baseline_vs_psi0.py --backend dense
 | BowEmbedder | 4 | 0 | 10 | 5 | 1 | 7 | 12 |
 | STEmbedder | 2 | 1 | 11 | 2 | 1 | 6 | 13 |
 
-Outcome matches `evaluation_baseline_vs_psi0.md` and the committed JSON artifacts. No regeneration or doc updates required.
+Outcome matches `evaluation_baseline_vs_psi0.md` and the committed JSON artifacts (aggregate metrics; path serialization in JSON may differ on POSIX). No regeneration or doc updates required.
