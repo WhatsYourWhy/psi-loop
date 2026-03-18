@@ -26,7 +26,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--backend",
         choices=("bow", "dense"),
-        default="dense",
+        default="bow",
         help="Embedder backend to use for the forensic run.",
     )
     parser.add_argument(
