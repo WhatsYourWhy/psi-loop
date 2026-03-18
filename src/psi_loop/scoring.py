@@ -78,6 +78,10 @@ PLAN_DEPENDENCY_CUES = _normalized_cue_set(
 PLAN_RISK_CUES = _normalized_cue_set(
     ["risk", "tradeoff", "constraint", "milestone", "timeline", "rollback", "guardrail"]
 )
+# Relation-aware cues (implicit utility): no overlap with sequencing/dependency/risk buckets.
+PLAN_RELATION_CUES = _normalized_cue_set(
+    ["missing", "enable", "supports", "allows", "ensures", "unblocks", "needed"]
+)
 PLAN_BONUS_ALPHA = 0.12
 
 
@@ -88,7 +92,8 @@ def _goal_is_planning_shaped(goal: str) -> bool:
 
 
 def _plan_structure_score(candidate_text: str, goal: str) -> float:
-    """Planning-structure signal in [0, 1] from bucketed cue coverage. Only meaningful when goal is planning-shaped."""
+    """Planning-structure signal in [0, 1] from bucketed cue coverage (sequencing, dependency, risk, relation).
+    Only meaningful when goal is planning-shaped."""
     if not _goal_is_planning_shaped(goal):
         return 0.0
     candidate_tokens = set(tokenize(candidate_text))
@@ -99,7 +104,9 @@ def _plan_structure_score(candidate_text: str, goal: str) -> float:
         matched += 1
     if candidate_tokens & PLAN_RISK_CUES:
         matched += 1
-    return matched / 3.0
+    if candidate_tokens & PLAN_RELATION_CUES:
+        matched += 1
+    return matched / 4.0
 
 
 def _value_with_plan_bonus(candidate_text: str, goal: str) -> tuple[float, float]:
@@ -186,7 +193,7 @@ def psi_0(
     """Return overall Psi0 score plus its value and surprise components.
 
     Value may include a small planning-structure bonus when the goal is planning-shaped
-    and the candidate contains sequencing/dependency/risk cues (V' = clamp(V + α·S_plan, 0, 1)).
+    and the candidate contains sequencing/dependency/risk/relation cues (V' = clamp(V + α·S_plan, 0, 1)).
     """
     value, _ = _value_with_plan_bonus(candidate_text, goal)
     surprise = surprise_score(candidate_text, current_context, embedder=embedder)

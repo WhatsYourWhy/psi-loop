@@ -229,3 +229,57 @@ Full test suite, Bow and Dense benchmarks re-run with current code (P2 guard + p
 - **Tests:** 41 passed in 0.28s.
 - **Bow:** Wins psi0=4, baseline=0, tie=10. Useful: psi0=5, baseline=1. Redundant: psi0=7, baseline=12. `realistic_roadmap_planning`: tie (both select `novel_data_contracts`).
 - **Dense:** Wins psi0=2, baseline=1, tie=11. Useful: psi0=2, baseline=1. Redundant: psi0=6, baseline=13. `realistic_roadmap_planning`: baseline win (Psi0 `unrelated_visual_refresh`, baseline `novel_data_contracts`).
+
+---
+
+## 2025-03-17 — Relation-aware V bonus (experiment)
+
+**Change:** Fourth bucket added to the plan-structure bonus: relation cues (implicit utility). `PLAN_RELATION_CUES` = normalized set of: missing, enable, supports, allows, ensures, unblocks, needed (no overlap with sequencing/dependency/risk). `S_plan` = matched_buckets / 4. Same gate, same `v_base > 0` guard, same α=0.12. Gold roadmap candidate text contains "missing", so it now receives a relation-bucket contribution.
+
+### Test suite
+
+```
+pytest tests/ -v
+```
+
+- **Result:** 44 passed.
+
+### Bow (relation bonus)
+
+```
+PYTHONPATH=src python scripts/run_baseline_vs_psi0.py --backend bow --json-out evaluation_results_baseline_vs_psi0_bow_relation_bonus.json
+```
+
+| Metric | Relation bonus (this run) | Plan bonus (prior) |
+|--------|---------------------------|--------------------|
+| Wins | psi0=4, baseline=0, tie=10 | psi0=4, baseline=0, tie=10 |
+| Useful hits | psi0=5, baseline=1 | psi0=5, baseline=1 |
+| Redundant hits | psi0=7, baseline=12 | psi0=7, baseline=12 |
+
+**Artifacts:** `evaluation_results_baseline_vs_psi0_bow_relation_bonus.json`  
+**Roadmap:** tie (both select `novel_data_contracts`). No regression.
+
+### Dense (relation bonus)
+
+```
+PYTHONPATH=src python scripts/run_baseline_vs_psi0.py --backend dense --json-out evaluation_results_baseline_vs_psi0_dense_all-MiniLM-L6-v2_relation_bonus.json
+```
+
+| Metric | Relation bonus (this run) | Plan bonus (prior) |
+|--------|---------------------------|--------------------|
+| Wins | psi0=2, baseline=1, tie=11 | psi0=2, baseline=1, tie=11 |
+| Useful hits | psi0=2, baseline=1 | psi0=2, baseline=1 |
+| Redundant hits | psi0=6, baseline=13 | psi0=6, baseline=13 |
+
+**Notable:** `realistic_roadmap_planning` — still **baseline win** (Psi0 selects `unrelated_visual_refresh`, baseline selects `novel_data_contracts`). The gold candidate ("…investments **missing** from the roadmap") now receives the relation-bucket bonus, but the dense ranking was not flipped; the value bump (α × 0.25) may be insufficient relative to the dense similarity gap for the competing candidate.
+
+**Artifacts:** `evaluation_results_baseline_vs_psi0_dense_all-MiniLM-L6-v2_relation_bonus.json`
+
+### Relation-bonus summary
+
+| Backend | Psi0 wins | Baseline wins | Ties | Psi0 useful | Psi0 redundant |
+|---------|-----------|---------------|------|-------------|----------------|
+| Bow (relation bonus) | 4 | 0 | 10 | 5 | 7 |
+| Dense (relation bonus) | 2 | 1 | 11 | 2 | 6 |
+
+**Conclusion:** No regression on Bow; dense roadmap outcome unchanged. Relation-aware bucket is active and unit-tested; next steps could include a larger α for the relation bucket only, or additional relational cues, while staying in narrow hypothesis-testing mode.

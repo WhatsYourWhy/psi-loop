@@ -207,6 +207,65 @@ def test_planning_only_goal_activates_bonus():
     assert value_prime > v_base
 
 
+def test_relation_cue_raises_value_for_planning_goal():
+    """Planning-shaped goal: adding a relation cue (e.g. 'missing') increases value when v_base > 0."""
+    goal = "Select the best notes for a roadmap discussion on analytics reliability."
+    candidate_without_relation = "Roadmap notes on analytics reliability."
+    candidate_with_relation = "Roadmap notes on analytics reliability missing from the draft."
+    assert keyword_overlap(candidate_without_relation, goal) > 0.0
+    assert keyword_overlap(candidate_with_relation, goal) > 0.0
+    _, value_without, _ = psi_0(
+        candidate_without_relation,
+        goal,
+        ["context"],
+        embedder=FakeDenseEmbedder({
+            candidate_without_relation: (0.5, 0.5),
+            candidate_with_relation: (0.5, 0.5),
+            "context": (0.0, 1.0),
+        }),
+    )
+    _, value_with_relation, _ = psi_0(
+        candidate_with_relation,
+        goal,
+        ["context"],
+        embedder=FakeDenseEmbedder({
+            candidate_without_relation: (0.5, 0.5),
+            candidate_with_relation: (0.5, 0.5),
+            "context": (0.0, 1.0),
+        }),
+    )
+    assert value_with_relation > value_without
+
+
+def test_relation_cues_no_bonus_for_non_planning_goal():
+    """Non-planning goal: candidate with relation cues gets value equal to keyword_overlap (no bonus)."""
+    goal = "Improve API retry handling for transient failures."
+    candidate = "Use exponential backoff. Missing from the current design."
+    v_base = keyword_overlap(candidate, goal)
+    _, value_prime, _ = psi_0(
+        candidate,
+        goal,
+        ["context"],
+        embedder=FakeDenseEmbedder({candidate: (0.3, 0.7), "context": (0.0, 1.0)}),
+    )
+    assert round(value_prime, 6) == round(v_base, 6)
+
+
+def test_planning_goal_only_relation_cue_gets_bonus():
+    """Planning goal + candidate with only relation cue (no seq/dep/risk) still gets non-zero S_plan when v_base > 0."""
+    goal = "Select the best notes for a roadmap discussion."
+    candidate = "Roadmap discussion notes. Missing from the draft."
+    v_base = keyword_overlap(candidate, goal)
+    assert v_base > 0.0
+    _, value_prime, _ = psi_0(
+        candidate,
+        goal,
+        ["context"],
+        embedder=FakeDenseEmbedder({candidate: (0.5, 0.5), "context": (0.0, 1.0)}),
+    )
+    assert value_prime > v_base
+
+
 def test_deterministic_dense_embedder_can_drive_psi0():
     embedder = DeterministicDenseEmbedder()
 
