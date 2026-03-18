@@ -1,0 +1,425 @@
+{
+  "tasks": [
+    {
+      "id": "synthetic_retry_backoff",
+      "category": "synthetic_redundancy",
+      "goal": "Improve API retry handling for transient failures and rate limits.",
+      "current_context": [
+        "The current client already retries transient failures with fixed delay.",
+        "Avoid selecting another note that repeats the fixed-delay policy."
+      ],
+      "max_tokens": 10,
+      "candidates": [
+        {
+          "id": "redundant_fixed_delay",
+          "source": "legacy-note",
+          "text": "Improve API retry handling for transient failures with fixed delay."
+        },
+        {
+          "id": "novel_backoff_jitter",
+          "source": "best-practice",
+          "text": "Exponential backoff with jitter reduces rate-limit collisions during retries."
+        },
+        {
+          "id": "unrelated_observability",
+          "source": "ops",
+          "text": "Capture request IDs in logs for easier debugging."
+        }
+      ],
+      "expected_winner": "psi0",
+      "gold_useful_candidates": ["novel_backoff_jitter"],
+      "gold_redundant_candidates": ["redundant_fixed_delay"],
+      "notes": "Baseline should prefer the repeated fixed-delay phrasing while Psi0 should reward the more novel improvement."
+    },
+    {
+      "id": "synthetic_cache_invalidation",
+      "category": "synthetic_redundancy",
+      "goal": "Improve cache invalidation strategy after product price updates.",
+      "current_context": [
+        "The current system already does TTL-only cache expiry after price updates."
+      ],
+      "max_tokens": 10,
+      "candidates": [
+        {
+          "id": "redundant_ttl_only",
+          "source": "existing-runbook",
+          "text": "Improve cache invalidation after price updates with TTL-only expiry."
+        },
+        {
+          "id": "novel_event_invalidation",
+          "source": "design-note",
+          "text": "Publish price-change events so caches can invalidate keys immediately."
+        },
+        {
+          "id": "unrelated_dashboard",
+          "source": "analytics",
+          "text": "Track cache hit rate on the pricing dashboard."
+        }
+      ],
+      "expected_winner": "psi0",
+      "gold_useful_candidates": ["novel_event_invalidation"],
+      "gold_redundant_candidates": ["redundant_ttl_only"],
+      "notes": "The task is framed around improvement, so repeating TTL-only should be penalized as redundant."
+    },
+    {
+      "id": "synthetic_schema_migration",
+      "category": "synthetic_redundancy",
+      "goal": "Plan a safer user table schema migration with minimal downtime.",
+      "current_context": [
+        "The current migration note recommends blocking writes during the schema change."
+      ],
+      "max_tokens": 10,
+      "candidates": [
+        {
+          "id": "redundant_blocking_window",
+          "source": "old-migration-note",
+          "text": "Plan the schema migration with a blocking write window during deployment."
+        },
+        {
+          "id": "novel_expand_contract",
+          "source": "db-pattern",
+          "text": "Use an expand-contract migration so reads and writes remain online."
+        },
+        {
+          "id": "unrelated_cleanup",
+          "source": "backlog",
+          "text": "Remove unused database indexes after the migration."
+        }
+      ],
+      "expected_winner": "psi0",
+      "gold_useful_candidates": ["novel_expand_contract"],
+      "gold_redundant_candidates": ["redundant_blocking_window"],
+      "notes": "Psi0 should favor the novel safer pattern over the already-known blocking approach."
+    },
+    {
+      "id": "synthetic_feature_flag_rollout",
+      "category": "synthetic_redundancy",
+      "goal": "Design a safer feature flag rollout for the new checkout flow.",
+      "current_context": [
+        "The current rollout plan already enables the flag for everyone at once."
+      ],
+      "max_tokens": 10,
+      "candidates": [
+        {
+          "id": "redundant_global_rollout",
+          "source": "launch-plan",
+          "text": "Design the checkout rollout by enabling the flag for everyone at once."
+        },
+        {
+          "id": "novel_progressive_rollout",
+          "source": "release-pattern",
+          "text": "Use a percentage rollout with guardrail metrics before full exposure."
+        },
+        {
+          "id": "unrelated_copy_update",
+          "source": "marketing",
+          "text": "Update the checkout help text before launch."
+        }
+      ],
+      "expected_winner": "psi0",
+      "gold_useful_candidates": ["novel_progressive_rollout"],
+      "gold_redundant_candidates": ["redundant_global_rollout"],
+      "notes": "A progressive rollout is the novel safety lever; the global rollout note repeats the current plan."
+    },
+    {
+      "id": "synthetic_incident_playbook",
+      "category": "synthetic_redundancy",
+      "goal": "Improve the incident response playbook for database failover events.",
+      "current_context": [
+        "The current playbook already says to restart application servers during failover."
+      ],
+      "max_tokens": 10,
+      "candidates": [
+        {
+          "id": "redundant_restart_step",
+          "source": "old-playbook",
+          "text": "Improve the failover playbook by restarting application servers during failover."
+        },
+        {
+          "id": "novel_readonly_guardrail",
+          "source": "resilience-note",
+          "text": "Add a temporary read-only mode so writes pause cleanly during failover."
+        },
+        {
+          "id": "unrelated_incident_tags",
+          "source": "ops-hygiene",
+          "text": "Standardize incident tags for reporting."
+        }
+      ],
+      "expected_winner": "psi0",
+      "gold_useful_candidates": ["novel_readonly_guardrail"],
+      "gold_redundant_candidates": ["redundant_restart_step"],
+      "notes": "The new guardrail changes behavior; the restart note just repeats current context."
+    },
+    {
+      "id": "synthetic_data_dedup",
+      "category": "synthetic_redundancy",
+      "goal": "Improve customer record deduplication before CRM imports.",
+      "current_context": [
+        "The current import note already uses exact email match for deduplication."
+      ],
+      "max_tokens": 10,
+      "candidates": [
+        {
+          "id": "redundant_exact_email",
+          "source": "existing-import-note",
+          "text": "Improve CRM deduplication by using exact email match before imports."
+        },
+        {
+          "id": "novel_multi_signal_match",
+          "source": "data-quality",
+          "text": "Combine email, company, and normalized phone signals to catch near-duplicates."
+        },
+        {
+          "id": "unrelated_csv_sorting",
+          "source": "etl",
+          "text": "Sort CSV rows before import for easier debugging."
+        }
+      ],
+      "expected_winner": "psi0",
+      "gold_useful_candidates": ["novel_multi_signal_match"],
+      "gold_redundant_candidates": ["redundant_exact_email"],
+      "notes": "The new candidate adds missing recall while the old note only restates exact-match behavior."
+    },
+    {
+      "id": "synthetic_log_retention",
+      "category": "synthetic_redundancy",
+      "goal": "Improve log retention for security investigations.",
+      "current_context": [
+        "The current retention policy already keeps logs for seven days."
+      ],
+      "max_tokens": 10,
+      "candidates": [
+        {
+          "id": "redundant_seven_days",
+          "source": "policy-note",
+          "text": "Improve log retention by keeping application logs for seven days."
+        },
+        {
+          "id": "novel_tiered_retention",
+          "source": "security-review",
+          "text": "Keep searchable summaries hot and archive raw logs for ninety days."
+        },
+        {
+          "id": "unrelated_pretty_print",
+          "source": "dev-experience",
+          "text": "Pretty-print JSON logs for local development."
+        }
+      ],
+      "expected_winner": "psi0",
+      "gold_useful_candidates": ["novel_tiered_retention"],
+      "gold_redundant_candidates": ["redundant_seven_days"],
+      "notes": "Baseline should overvalue wording overlap while Psi0 should surface the more novel retention change."
+    },
+    {
+      "id": "synthetic_search_ranking",
+      "category": "synthetic_redundancy",
+      "goal": "Improve search ranking for documentation queries.",
+      "current_context": [
+        "The current search note already ranks results only by keyword frequency."
+      ],
+      "max_tokens": 10,
+      "candidates": [
+        {
+          "id": "redundant_keyword_frequency",
+          "source": "search-note",
+          "text": "Improve search ranking by using keyword frequency for documentation queries."
+        },
+        {
+          "id": "novel_click_feedback",
+          "source": "ranking-idea",
+          "text": "Blend keyword ranking with click feedback to promote actually useful docs."
+        },
+        {
+          "id": "unrelated_theme",
+          "source": "docs-site",
+          "text": "Update the documentation site theme colors."
+        }
+      ],
+      "expected_winner": "psi0",
+      "gold_useful_candidates": ["novel_click_feedback"],
+      "gold_redundant_candidates": ["redundant_keyword_frequency"],
+      "notes": "This is a pure redundancy test: same goal words versus a more useful but slightly more novel candidate."
+    },
+    {
+      "id": "synthetic_webhook_delivery",
+      "category": "synthetic_redundancy",
+      "goal": "Improve webhook delivery reliability for third-party integrations.",
+      "current_context": [
+        "The current webhook note already retries failed deliveries three times without jitter."
+      ],
+      "max_tokens": 10,
+      "candidates": [
+        {
+          "id": "redundant_three_retries",
+          "source": "integration-note",
+          "text": "Improve webhook delivery by retrying failed deliveries three times."
+        },
+        {
+          "id": "novel_dead_letter_queue",
+          "source": "integration-design",
+          "text": "Store exhausted webhook events in a dead-letter queue for recovery."
+        },
+        {
+          "id": "unrelated_console",
+          "source": "admin-ui",
+          "text": "Add a webhook filter to the admin console."
+        }
+      ],
+      "expected_winner": "psi0",
+      "gold_useful_candidates": ["novel_dead_letter_queue"],
+      "gold_redundant_candidates": ["redundant_three_retries"],
+      "notes": "The useful candidate introduces recovery behavior instead of repeating the current retry count."
+    },
+    {
+      "id": "synthetic_model_eval",
+      "category": "synthetic_redundancy",
+      "goal": "Improve the model evaluation set for support ticket triage.",
+      "current_context": [
+        "The current evaluation note already samples only easy resolved tickets."
+      ],
+      "max_tokens": 10,
+      "candidates": [
+        {
+          "id": "redundant_easy_tickets",
+          "source": "eval-note",
+          "text": "Improve the evaluation set by sampling easy resolved support tickets."
+        },
+        {
+          "id": "novel_hard_negative_slice",
+          "source": "ml-review",
+          "text": "Add ambiguous and long-tail tickets so hard negatives are represented."
+        },
+        {
+          "id": "unrelated_prompt",
+          "source": "prompting",
+          "text": "Shorten the model system prompt for lower latency."
+        }
+      ],
+      "expected_winner": "psi0",
+      "gold_useful_candidates": ["novel_hard_negative_slice"],
+      "gold_redundant_candidates": ["redundant_easy_tickets"],
+      "notes": "Psi0 should prefer the candidate that changes the evaluation set, not the one that repeats an existing bias."
+    },
+    {
+      "id": "realistic_status_brief",
+      "category": "realistic_knowledge_work",
+      "goal": "Prepare an executive status brief for launch risks and mitigations.",
+      "current_context": [
+        "The current draft already says the launch schedule is tight and dependencies are cross-team."
+      ],
+      "max_tokens": 11,
+      "candidates": [
+        {
+          "id": "redundant_schedule_risk",
+          "source": "draft-brief",
+          "text": "The executive status brief should mention schedule pressure and cross-team dependencies."
+        },
+        {
+          "id": "novel_mitigation_note",
+          "source": "program-note",
+          "text": "QA automation gaps and vendor lead times are the main risks; weekly burn-down is the mitigation."
+        },
+        {
+          "id": "unrelated_meeting_note",
+          "source": "meeting",
+          "text": "The launch review meeting moved from Tuesday to Wednesday."
+        }
+      ],
+      "expected_winner": "psi0",
+      "gold_useful_candidates": ["novel_mitigation_note"],
+      "gold_redundant_candidates": ["redundant_schedule_risk"],
+      "notes": "A good brief needs the missing mitigation detail, not more repetition of known schedule risk."
+    },
+    {
+      "id": "realistic_research_synthesis",
+      "category": "realistic_knowledge_work",
+      "goal": "Synthesize notes for a memo on why retrieval fails under redundancy.",
+      "current_context": [
+        "The current memo already argues that semantic similarity alone retrieves repetitive evidence."
+      ],
+      "max_tokens": 11,
+      "candidates": [
+        {
+          "id": "redundant_similarity_claim",
+          "source": "draft-memo",
+          "text": "The memo should explain that semantic similarity alone retrieves repetitive evidence."
+        },
+        {
+          "id": "novel_token_budget_angle",
+          "source": "analysis-note",
+          "text": "Redundant retrieval wastes token budget and crowds out information gain."
+        },
+        {
+          "id": "unrelated_history",
+          "source": "background",
+          "text": "The retrieval prototype started as a late-night draft."
+        }
+      ],
+      "expected_winner": "psi0",
+      "gold_useful_candidates": ["novel_token_budget_angle"],
+      "gold_redundant_candidates": ["redundant_similarity_claim"],
+      "notes": "This realistic synthesis task rewards the missing consequence rather than the already-stated premise."
+    },
+    {
+      "id": "realistic_code_review_prep",
+      "category": "realistic_knowledge_work",
+      "goal": "Prepare review notes for a pull request improving background job safety.",
+      "current_context": [
+        "The current review notes already mention that the job retries with fixed delay."
+      ],
+      "max_tokens": 11,
+      "candidates": [
+        {
+          "id": "redundant_fixed_delay_review",
+          "source": "review-draft",
+          "text": "The review should mention that the background job retries with fixed delay."
+        },
+        {
+          "id": "novel_idempotency_risk",
+          "source": "review-insight",
+          "text": "The more important review note is missing idempotency checks around repeated execution."
+        },
+        {
+          "id": "unrelated_style",
+          "source": "lint",
+          "text": "Rename the temporary variable for readability."
+        }
+      ],
+      "expected_winner": "psi0",
+      "gold_useful_candidates": ["novel_idempotency_risk"],
+      "gold_redundant_candidates": ["redundant_fixed_delay_review"],
+      "notes": "The useful context adds a new failure mode instead of echoing the already-observed retry behavior."
+    },
+    {
+      "id": "realistic_roadmap_planning",
+      "category": "realistic_knowledge_work",
+      "goal": "Select the best notes for a roadmap discussion on analytics reliability.",
+      "current_context": [
+        "The current roadmap context already says dashboards are flaky because upstream jobs fail silently."
+      ],
+      "max_tokens": 11,
+      "candidates": [
+        {
+          "id": "redundant_flaky_dashboards",
+          "source": "roadmap-draft",
+          "text": "Roadmap notes should say dashboards are flaky because upstream jobs fail silently."
+        },
+        {
+          "id": "novel_data_contracts",
+          "source": "planning-note",
+          "text": "Data contracts and freshness alerts are the concrete reliability investments missing from the roadmap."
+        },
+        {
+          "id": "unrelated_visual_refresh",
+          "source": "design",
+          "text": "Refresh chart colors for the analytics interface."
+        }
+      ],
+      "expected_winner": "psi0",
+      "gold_useful_candidates": ["novel_data_contracts"],
+      "gold_redundant_candidates": ["redundant_flaky_dashboards"],
+      "notes": "The realistic planning task needs actionable investments, not another restatement of the known symptom."
+    }
+  ]
+}

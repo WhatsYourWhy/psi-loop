@@ -1,0 +1,497 @@
+{
+  "fixture_path": "tests\\fixtures\\benchmark_tasks.json",
+  "embedder": "BowEmbedder",
+  "task_results": [
+    {
+      "id": "synthetic_retry_backoff",
+      "category": "synthetic_redundancy",
+      "goal": "Improve API retry handling for transient failures and rate limits.",
+      "notes": "Baseline should prefer the repeated fixed-delay phrasing while Psi0 should reward the more novel improvement.",
+      "expected_winner": "psi0",
+      "winner": "psi0",
+      "expected_match": true,
+      "gold_useful_candidates": [
+        "novel_backoff_jitter"
+      ],
+      "gold_redundant_candidates": [
+        "redundant_fixed_delay"
+      ],
+      "psi0": {
+        "selected_ids": [
+          "novel_backoff_jitter"
+        ],
+        "selected_token_total": 9,
+        "useful_hits": 1,
+        "redundant_hits": 0,
+        "useful_precision": 1.0
+      },
+      "baseline": {
+        "selected_ids": [
+          "redundant_fixed_delay"
+        ],
+        "selected_token_total": 8,
+        "useful_hits": 0,
+        "redundant_hits": 1,
+        "useful_precision": 0.0
+      }
+    },
+    {
+      "id": "synthetic_cache_invalidation",
+      "category": "synthetic_redundancy",
+      "goal": "Improve cache invalidation strategy after product price updates.",
+      "notes": "The task is framed around improvement, so repeating TTL-only should be penalized as redundant.",
+      "expected_winner": "psi0",
+      "winner": "tie",
+      "expected_match": false,
+      "gold_useful_candidates": [
+        "novel_event_invalidation"
+      ],
+      "gold_redundant_candidates": [
+        "redundant_ttl_only"
+      ],
+      "psi0": {
+        "selected_ids": [
+          "redundant_ttl_only"
+        ],
+        "selected_token_total": 9,
+        "useful_hits": 0,
+        "redundant_hits": 1,
+        "useful_precision": 0.0
+      },
+      "baseline": {
+        "selected_ids": [
+          "redundant_ttl_only"
+        ],
+        "selected_token_total": 9,
+        "useful_hits": 0,
+        "redundant_hits": 1,
+        "useful_precision": 0.0
+      }
+    },
+    {
+      "id": "synthetic_schema_migration",
+      "category": "synthetic_redundancy",
+      "goal": "Plan a safer user table schema migration with minimal downtime.",
+      "notes": "Psi0 should favor the novel safer pattern over the already-known blocking approach.",
+      "expected_winner": "psi0",
+      "winner": "tie",
+      "expected_match": false,
+      "gold_useful_candidates": [
+        "novel_expand_contract"
+      ],
+      "gold_redundant_candidates": [
+        "redundant_blocking_window"
+      ],
+      "psi0": {
+        "selected_ids": [
+          "redundant_blocking_window"
+        ],
+        "selected_token_total": 8,
+        "useful_hits": 0,
+        "redundant_hits": 1,
+        "useful_precision": 0.0
+      },
+      "baseline": {
+        "selected_ids": [
+          "redundant_blocking_window"
+        ],
+        "selected_token_total": 8,
+        "useful_hits": 0,
+        "redundant_hits": 1,
+        "useful_precision": 0.0
+      }
+    },
+    {
+      "id": "synthetic_feature_flag_rollout",
+      "category": "synthetic_redundancy",
+      "goal": "Design a safer feature flag rollout for the new checkout flow.",
+      "notes": "A progressive rollout is the novel safety lever; the global rollout note repeats the current plan.",
+      "expected_winner": "psi0",
+      "winner": "tie",
+      "expected_match": false,
+      "gold_useful_candidates": [
+        "novel_progressive_rollout"
+      ],
+      "gold_redundant_candidates": [
+        "redundant_global_rollout"
+      ],
+      "psi0": {
+        "selected_ids": [
+          "redundant_global_rollout"
+        ],
+        "selected_token_total": 8,
+        "useful_hits": 0,
+        "redundant_hits": 1,
+        "useful_precision": 0.0
+      },
+      "baseline": {
+        "selected_ids": [
+          "redundant_global_rollout"
+        ],
+        "selected_token_total": 8,
+        "useful_hits": 0,
+        "redundant_hits": 1,
+        "useful_precision": 0.0
+      }
+    },
+    {
+      "id": "synthetic_incident_playbook",
+      "category": "synthetic_redundancy",
+      "goal": "Improve the incident response playbook for database failover events.",
+      "notes": "The new guardrail changes behavior; the restart note just repeats current context.",
+      "expected_winner": "psi0",
+      "winner": "tie",
+      "expected_match": false,
+      "gold_useful_candidates": [
+        "novel_readonly_guardrail"
+      ],
+      "gold_redundant_candidates": [
+        "redundant_restart_step"
+      ],
+      "psi0": {
+        "selected_ids": [
+          "unrelated_incident_tags"
+        ],
+        "selected_token_total": 4,
+        "useful_hits": 0,
+        "redundant_hits": 0,
+        "useful_precision": 0.0
+      },
+      "baseline": {
+        "selected_ids": [
+          "redundant_restart_step"
+        ],
+        "selected_token_total": 9,
+        "useful_hits": 0,
+        "redundant_hits": 1,
+        "useful_precision": 0.0
+      }
+    },
+    {
+      "id": "synthetic_data_dedup",
+      "category": "synthetic_redundancy",
+      "goal": "Improve customer record deduplication before CRM imports.",
+      "notes": "The new candidate adds missing recall while the old note only restates exact-match behavior.",
+      "expected_winner": "psi0",
+      "winner": "tie",
+      "expected_match": false,
+      "gold_useful_candidates": [
+        "novel_multi_signal_match"
+      ],
+      "gold_redundant_candidates": [
+        "redundant_exact_email"
+      ],
+      "psi0": {
+        "selected_ids": [
+          "redundant_exact_email"
+        ],
+        "selected_token_total": 10,
+        "useful_hits": 0,
+        "redundant_hits": 1,
+        "useful_precision": 0.0
+      },
+      "baseline": {
+        "selected_ids": [
+          "redundant_exact_email"
+        ],
+        "selected_token_total": 10,
+        "useful_hits": 0,
+        "redundant_hits": 1,
+        "useful_precision": 0.0
+      }
+    },
+    {
+      "id": "synthetic_log_retention",
+      "category": "synthetic_redundancy",
+      "goal": "Improve log retention for security investigations.",
+      "notes": "Baseline should overvalue wording overlap while Psi0 should surface the more novel retention change.",
+      "expected_winner": "psi0",
+      "winner": "tie",
+      "expected_match": false,
+      "gold_useful_candidates": [
+        "novel_tiered_retention"
+      ],
+      "gold_redundant_candidates": [
+        "redundant_seven_days"
+      ],
+      "psi0": {
+        "selected_ids": [
+          "redundant_seven_days"
+        ],
+        "selected_token_total": 9,
+        "useful_hits": 0,
+        "redundant_hits": 1,
+        "useful_precision": 0.0
+      },
+      "baseline": {
+        "selected_ids": [
+          "redundant_seven_days"
+        ],
+        "selected_token_total": 9,
+        "useful_hits": 0,
+        "redundant_hits": 1,
+        "useful_precision": 0.0
+      }
+    },
+    {
+      "id": "synthetic_search_ranking",
+      "category": "synthetic_redundancy",
+      "goal": "Improve search ranking for documentation queries.",
+      "notes": "This is a pure redundancy test: same goal words versus a more useful but slightly more novel candidate.",
+      "expected_winner": "psi0",
+      "winner": "tie",
+      "expected_match": false,
+      "gold_useful_candidates": [
+        "novel_click_feedback"
+      ],
+      "gold_redundant_candidates": [
+        "redundant_keyword_frequency"
+      ],
+      "psi0": {
+        "selected_ids": [
+          "redundant_keyword_frequency"
+        ],
+        "selected_token_total": 9,
+        "useful_hits": 0,
+        "redundant_hits": 1,
+        "useful_precision": 0.0
+      },
+      "baseline": {
+        "selected_ids": [
+          "redundant_keyword_frequency"
+        ],
+        "selected_token_total": 9,
+        "useful_hits": 0,
+        "redundant_hits": 1,
+        "useful_precision": 0.0
+      }
+    },
+    {
+      "id": "synthetic_webhook_delivery",
+      "category": "synthetic_redundancy",
+      "goal": "Improve webhook delivery reliability for third-party integrations.",
+      "notes": "The useful candidate introduces recovery behavior instead of repeating the current retry count.",
+      "expected_winner": "psi0",
+      "winner": "tie",
+      "expected_match": false,
+      "gold_useful_candidates": [
+        "novel_dead_letter_queue"
+      ],
+      "gold_redundant_candidates": [
+        "redundant_three_retries"
+      ],
+      "psi0": {
+        "selected_ids": [
+          "redundant_three_retries"
+        ],
+        "selected_token_total": 9,
+        "useful_hits": 0,
+        "redundant_hits": 1,
+        "useful_precision": 0.0
+      },
+      "baseline": {
+        "selected_ids": [
+          "redundant_three_retries"
+        ],
+        "selected_token_total": 9,
+        "useful_hits": 0,
+        "redundant_hits": 1,
+        "useful_precision": 0.0
+      }
+    },
+    {
+      "id": "synthetic_model_eval",
+      "category": "synthetic_redundancy",
+      "goal": "Improve the model evaluation set for support ticket triage.",
+      "notes": "Psi0 should prefer the candidate that changes the evaluation set, not the one that repeats an existing bias.",
+      "expected_winner": "psi0",
+      "winner": "tie",
+      "expected_match": false,
+      "gold_useful_candidates": [
+        "novel_hard_negative_slice"
+      ],
+      "gold_redundant_candidates": [
+        "redundant_easy_tickets"
+      ],
+      "psi0": {
+        "selected_ids": [
+          "redundant_easy_tickets"
+        ],
+        "selected_token_total": 9,
+        "useful_hits": 0,
+        "redundant_hits": 1,
+        "useful_precision": 0.0
+      },
+      "baseline": {
+        "selected_ids": [
+          "redundant_easy_tickets"
+        ],
+        "selected_token_total": 9,
+        "useful_hits": 0,
+        "redundant_hits": 1,
+        "useful_precision": 0.0
+      }
+    },
+    {
+      "id": "realistic_status_brief",
+      "category": "realistic_knowledge_work",
+      "goal": "Prepare an executive status brief for launch risks and mitigations.",
+      "notes": "A good brief needs the missing mitigation detail, not more repetition of known schedule risk.",
+      "expected_winner": "psi0",
+      "winner": "tie",
+      "expected_match": false,
+      "gold_useful_candidates": [
+        "novel_mitigation_note"
+      ],
+      "gold_redundant_candidates": [
+        "redundant_schedule_risk"
+      ],
+      "psi0": {
+        "selected_ids": [
+          "redundant_schedule_risk"
+        ],
+        "selected_token_total": 10,
+        "useful_hits": 0,
+        "redundant_hits": 1,
+        "useful_precision": 0.0
+      },
+      "baseline": {
+        "selected_ids": [
+          "redundant_schedule_risk"
+        ],
+        "selected_token_total": 10,
+        "useful_hits": 0,
+        "redundant_hits": 1,
+        "useful_precision": 0.0
+      }
+    },
+    {
+      "id": "realistic_research_synthesis",
+      "category": "realistic_knowledge_work",
+      "goal": "Synthesize notes for a memo on why retrieval fails under redundancy.",
+      "notes": "This realistic synthesis task rewards the missing consequence rather than the already-stated premise.",
+      "expected_winner": "psi0",
+      "winner": "psi0",
+      "expected_match": true,
+      "gold_useful_candidates": [
+        "novel_token_budget_angle"
+      ],
+      "gold_redundant_candidates": [
+        "redundant_similarity_claim"
+      ],
+      "psi0": {
+        "selected_ids": [
+          "novel_token_budget_angle"
+        ],
+        "selected_token_total": 9,
+        "useful_hits": 1,
+        "redundant_hits": 0,
+        "useful_precision": 1.0
+      },
+      "baseline": {
+        "selected_ids": [
+          "unrelated_history"
+        ],
+        "selected_token_total": 6,
+        "useful_hits": 0,
+        "redundant_hits": 0,
+        "useful_precision": 0.0
+      }
+    },
+    {
+      "id": "realistic_code_review_prep",
+      "category": "realistic_knowledge_work",
+      "goal": "Prepare review notes for a pull request improving background job safety.",
+      "notes": "The useful context adds a new failure mode instead of echoing the already-observed retry behavior.",
+      "expected_winner": "psi0",
+      "winner": "psi0",
+      "expected_match": true,
+      "gold_useful_candidates": [
+        "novel_idempotency_risk"
+      ],
+      "gold_redundant_candidates": [
+        "redundant_fixed_delay_review"
+      ],
+      "psi0": {
+        "selected_ids": [
+          "novel_idempotency_risk"
+        ],
+        "selected_token_total": 10,
+        "useful_hits": 1,
+        "redundant_hits": 0,
+        "useful_precision": 1.0
+      },
+      "baseline": {
+        "selected_ids": [
+          "redundant_fixed_delay_review"
+        ],
+        "selected_token_total": 8,
+        "useful_hits": 0,
+        "redundant_hits": 1,
+        "useful_precision": 0.0
+      }
+    },
+    {
+      "id": "realistic_roadmap_planning",
+      "category": "realistic_knowledge_work",
+      "goal": "Select the best notes for a roadmap discussion on analytics reliability.",
+      "notes": "The realistic planning task needs actionable investments, not another restatement of the known symptom.",
+      "expected_winner": "psi0",
+      "winner": "tie",
+      "expected_match": false,
+      "gold_useful_candidates": [
+        "novel_data_contracts"
+      ],
+      "gold_redundant_candidates": [
+        "redundant_flaky_dashboards"
+      ],
+      "psi0": {
+        "selected_ids": [
+          "novel_data_contracts"
+        ],
+        "selected_token_total": 9,
+        "useful_hits": 1,
+        "redundant_hits": 0,
+        "useful_precision": 1.0
+      },
+      "baseline": {
+        "selected_ids": [
+          "novel_data_contracts"
+        ],
+        "selected_token_total": 9,
+        "useful_hits": 1,
+        "redundant_hits": 0,
+        "useful_precision": 1.0
+      }
+    }
+  ],
+  "aggregate": {
+    "total_tasks": 14,
+    "wins": {
+      "psi0": 3,
+      "baseline": 0,
+      "tie": 11
+    },
+    "per_category": {
+      "synthetic_redundancy": {
+        "psi0": 1,
+        "baseline": 0,
+        "tie": 9,
+        "tasks": 10
+      },
+      "realistic_knowledge_work": {
+        "psi0": 2,
+        "baseline": 0,
+        "tie": 2,
+        "tasks": 4
+      }
+    },
+    "psi0_useful_hits": 4,
+    "baseline_useful_hits": 1,
+    "psi0_redundant_hits": 9,
+    "baseline_redundant_hits": 12,
+    "expected_match_count": 3,
+    "psi0_win_rate": 0.21428571428571427,
+    "decision": "refine_v"
+  }
+}

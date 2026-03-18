@@ -63,6 +63,12 @@ Run the test suite:
 pytest
 ```
 
+Run the benchmark evaluation:
+
+```powershell
+python scripts/run_baseline_vs_psi0.py
+```
+
 ## Public API
 
 The current package is organized around three main extension points:
@@ -98,6 +104,12 @@ If you want to evaluate whether the project is doing anything useful yet, use th
 3. Open `src/psi_loop/data/sample_tasks.json` and change the goal, current context, or candidates to see how ranking changes.
 4. Run `pytest` to make sure your changes did not break the existing behavior.
 
+For the more formal benchmark path:
+
+1. Run `python scripts/run_baseline_vs_psi0.py`.
+2. Inspect `evaluation_results_baseline_vs_psi0.json` for structured task-level outputs.
+3. Read `evaluation_baseline_vs_psi0.md` for the scientist-style interpretation of the latest run.
+
 The fastest way to learn the system is to tweak the fixture and rerun the CLI. That gives you immediate feedback on whether the ranking rule is behaving intuitively.
 
 If you want to test the new protocol seam rather than just the demo:
@@ -113,8 +125,12 @@ If you want to test the new protocol seam rather than just the demo:
 - `src/psi_loop/scoring.py`: scoring primitives for `V`, `H`, and `Psi0`
 - `src/psi_loop/pipeline.py`: `PsiLoop`, ranking helpers, and budget fitting
 - `src/psi_loop/baseline.py`: similarity-only comparison path
+- `src/psi_loop/evaluation.py`: benchmark evaluation helpers and aggregation logic
 - `src/psi_loop/cli.py`: fixture-backed CLI for local experiments
 - `src/psi_loop/data/sample_tasks.json`: bundled demo data for first-run testing
+- `tests/fixtures/benchmark_tasks.json`: hybrid benchmark task set for baseline-vs-`Psi0` evaluation
+- `scripts/run_baseline_vs_psi0.py`: one-command benchmark runner
+- `evaluation_baseline_vs_psi0.md`: latest written evaluation report
 - `tests/`: scoring, pipeline, and fixture-based regression tests
 
 ## Current Limits

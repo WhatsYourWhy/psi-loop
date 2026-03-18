@@ -56,3 +56,4 @@ class TaskDefinition:
     current_context: list[str]
     max_tokens: int
     candidates: list[Candidate]
+    metadata: dict[str, Any] = field(default_factory=dict)

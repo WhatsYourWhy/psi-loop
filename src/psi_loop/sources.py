@@ -32,12 +32,14 @@ def _candidate_from_dict(item: dict[str, Any]) -> Candidate:
 
 
 def _task_from_dict(item: dict[str, Any]) -> TaskDefinition:
+    known_fields = {"id", "goal", "current_context", "max_tokens", "candidates"}
     return TaskDefinition(
         id=item["id"],
         goal=item["goal"],
         current_context=item.get("current_context", []),
         max_tokens=item.get("max_tokens", 64),
         candidates=[_candidate_from_dict(candidate) for candidate in item["candidates"]],
+        metadata={key: value for key, value in item.items() if key not in known_fields},
     )
 
 
