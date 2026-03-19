@@ -1,5 +1,9 @@
 # Evaluation Run Log
 
+**Current mainline:** Psi0 uses linear `V × H` scoring (value from keyword overlap plus planning-structure and relation-aware bonuses, gated on planning-shaped goals) with **near-tie value-priority** ranking: when two scores differ by less than `NEAR_TIE_EPSILON` (0.01), the candidate with higher value is ranked first before budget packing. Baseline: Bow 4 wins / 0 baseline / 10 ties (useful 5 vs 1, redundant 7 vs 12); Dense 2 wins / 0 baseline / 12 ties (useful 3 vs 1, redundant 6 vs 13). `realistic_roadmap_planning` is a tie on both backends (Psi0 selects gold `novel_data_contracts`). Full experiment history and artifact names are below.
+
+---
+
 ## 2025-03-17
 
 Full evaluation run: test suite, Bow benchmark, and Dense benchmark. Psi0 scoring: `score = value * surprise` (linear, no V²).

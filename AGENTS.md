@@ -13,6 +13,7 @@
 | CLI demo | `psi-loop --list-tasks` / `psi-loop --task retry_backoff` |
 | Benchmark (BoW) | `python3 scripts/run_baseline_vs_psi0.py --backend bow` |
 | Benchmark (dense, optional) | `pip install -e ".[dense]"` then `python3 scripts/run_baseline_vs_psi0.py --backend dense` |
+| Benchmark (custom output) | `--json-out <path>` to write results elsewhere (replay without overwriting reference artifacts; see `evaluation_run_log.md` for replay commands). |
 
 ### Non-obvious notes
 

@@ -1,5 +1,7 @@
 # Baseline vs Psi0 Evaluation
 
+**Current mainline (see [evaluation_run_log.md](evaluation_run_log.md) for experiment history):** Psi0 uses linear `V × H` with near-tie value-priority ranking. Bow and Dense both show no baseline wins; dense roadmap task is now a tie (Psi0 selects gold). Artifacts from the current system: `evaluation_results_baseline_vs_psi0_bow_near_tie_v_priority.json`, `evaluation_results_baseline_vs_psi0_dense_all-MiniLM-L6-v2_near_tie_v_priority.json`.
+
 ## Question
 
 Does `Psi0` select better context than the similarity-only baseline under token constraints, and does a stronger representation backend materially improve that result?
@@ -11,8 +13,9 @@ Does `Psi0` select better context than the similarity-only baseline under token 
 - Benchmark fixture: `tests/fixtures/benchmark_tasks.json`
 - Bow runner: `python scripts/run_baseline_vs_psi0.py --backend bow`
 - Dense runner: `python scripts/run_baseline_vs_psi0.py --backend dense`
-- Bow result artifact: `evaluation_results_baseline_vs_psi0_bow.json`
-- Dense result artifact: `evaluation_results_baseline_vs_psi0_dense_all-MiniLM-L6-v2.json`
+- Bow result artifact: `evaluation_results_baseline_vs_psi0_bow.json` (or `*_near_tie_v_priority.json` for current mainline)
+- Dense result artifact: `evaluation_results_baseline_vs_psi0_dense_all-MiniLM-L6-v2.json` (or `*_near_tie_v_priority.json`)
+- To avoid overwriting reference artifacts when replaying, use `--json-out <path>` (see [evaluation_run_log.md](evaluation_run_log.md)).
 - Dense model: `all-MiniLM-L6-v2`
 - Result metadata: each JSON artifact records `embedder_metadata.backend`, `embedder_metadata.class_name`, and `embedder_metadata.model_name`
 
@@ -53,12 +56,12 @@ Aggregate metrics:
 
 ## Results
 
-### Comparison matrix
+### Comparison matrix (current mainline: near-tie value-priority)
 
 | Backend | Psi0 wins | Baseline wins | Ties | Psi0 useful hits | Baseline useful hits | Psi0 redundant hits | Baseline redundant hits | Expected matches | Decision |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---|
 | `BowEmbedder` | 4 | 0 | 10 | 5 | 1 | 7 | 12 | 4 / 14 | `refine_v` |
-| `STEmbedder` | 2 | 1 | 11 | 2 | 1 | 6 | 13 | 2 / 14 | `refine_v` |
+| `STEmbedder` | 2 | 0 | 12 | 3 | 1 | 6 | 13 | 2 / 14 | `refine_v` |
 
 ### By category
 
@@ -70,62 +73,28 @@ Aggregate metrics:
 #### `STEmbedder`
 
 - `synthetic_redundancy`: `Psi0` 2, baseline 0, tie 8
-- `realistic_knowledge_work`: `Psi0` 0, baseline 1, tie 3
+- `realistic_knowledge_work`: `Psi0` 0, baseline 0, tie 4 (roadmap is tie; both select gold)
 
 ## Interpretation
 
-The dense backend still changed behavior, but the corrected run did not strengthen the scientific conclusion.
+The current mainline includes a **selection-time rule** (near-tie value-priority): when two candidates' Psi0 scores differ by less than 0.01, the one with higher value is ranked first before budget packing. That fixed the dense roadmap failure: the gold candidate had higher V but lost rank-1 by a tiny score gap; greedy budget then selected the high-surprise candidate. With near-tie V-priority, dense roadmap is now a tie and Psi0 useful hits on dense improved (2 → 3) with no baseline wins and no redundant-hit increase.
 
-What improved under dense embeddings:
+- **Bow:** unchanged; directional signal (4 wins, 0 baseline wins, useful 5 vs 1).
+- **Dense:** no baseline wins; roadmap tie; +1 Psi0 useful hit; redundant hits unchanged at 6.
 
-- `Psi0` selected fewer gold redundant candidates: `7 -> 6`
-- the baseline selected even more redundant candidates than before: `12 -> 13`
-
-What got worse:
-
-- `Psi0` wins dropped: `4 -> 2`
-- useful hits dropped: `5 -> 2`
-- expected-winner matches dropped: `4 -> 2`
-- dense introduced one outright baseline win (realistic_roadmap_planning)
-- ties increased: `10 -> 11`
-
-This means the current limitation is not simply that bag-of-words geometry is too weak. Better representation alone still did not unlock the existing `Psi0` logic on the frozen benchmark.
-
-The dominant failure pattern under dense embeddings was not “baseline beats `Psi0`.” The dominant pattern was:
-
-- `Psi0` suppressed redundancy somewhat better
-- but still often failed to land on the gold useful candidate
-- and in several cases drifted to unrelated candidates instead
-
-That is a sign that the current control signal is still under-specified. The geometry improved, but the selection logic still did not consistently turn that geometry into useful wins.
+So the bottleneck on dense was partly **how ranking and budgeting operationalize** the score, not only the score function itself. The run log documents the experiments that led here (plan bonus, relation bonus, forensic, near-tie rule).
 
 ## Scientific Conclusion
 
-For the current benchmark:
+For the current benchmark with near-tie value-priority:
 
-- `Psi0 + Bow` has directional signal but not proof
-- `Psi0 + dense` did not materially outperform `Psi0 + Bow`
-- dense embeddings alone do not unlock the architecture yet
+- Psi0 + Bow has directional signal (4 wins, no baseline wins).
+- Psi0 + dense now has no baseline wins; dense roadmap is tie; useful hits improved vs the pre-fix dense run.
+- The dense roadmap failure was addressed by a policy-layer change (tie resolution under score uncertainty), not by further lexical V engineering.
 
-The result is scientifically useful because it narrows the hypothesis:
+## Recommended Next Steps
 
-- the ranking principle still appears to have some signal
-- representation quality alone is not enough
-- the remaining bottleneck is likely still in the scoring signal or its balance, not just the embedder backend
-
-## Recommended Next Decision
-
-Do not expand the system yet.
-
-The dense experiment answered the question it was supposed to answer: swapping in a stronger embedder did not convert the benchmark into proof.
-
-That means the next credible move is not “more architecture.” It is one of:
-
-1. revise the scoring signal again in a tightly scoped way and rerun the frozen benchmark
-2. tighten the benchmark or gold-label definitions if they are not exposing the distinction cleanly enough
-3. stop if the control logic cannot be made to produce materially stronger wins under the fixed task set
-
-Right now, the evidence does **not** justify claiming that better semantic geometry alone unlocks `Psi0`.
+- Treat this as the dense-safe baseline. Further experiments are best in the **selection-policy** family (e.g. diversity-aware packing, reserve for top-V), not more cue buckets. See [evaluation_run_log.md](evaluation_run_log.md) for full history and replay commands.
 
 ## Reproduction
 
@@ -136,3 +105,5 @@ pytest
 python scripts/run_baseline_vs_psi0.py --backend bow
 python scripts/run_baseline_vs_psi0.py --backend dense
 ```
+
+To write results to a different file (e.g. when replaying without overwriting reference artifacts), use `--json-out <path>`. See [evaluation_run_log.md](evaluation_run_log.md) for replay commands.

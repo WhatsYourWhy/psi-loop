@@ -111,7 +111,7 @@ For the more formal benchmark path:
 
 1. Run `python scripts/run_baseline_vs_psi0.py --backend bow` for the zero-dependency baseline comparison.
 2. Optionally install `python -m pip install -e .[dense]` and run `python scripts/run_baseline_vs_psi0.py --backend dense`.
-3. Inspect `evaluation_results_baseline_vs_psi0_bow.json` and `evaluation_results_baseline_vs_psi0_dense_all-MiniLM-L6-v2.json` for structured task-level outputs, including embedder metadata. Dense defaults are model-specific so runs with different `--model-name` values do not overwrite each other.
+3. Inspect `evaluation_results_baseline_vs_psi0_bow.json` and `evaluation_results_baseline_vs_psi0_dense_all-MiniLM-L6-v2.json` for structured task-level outputs, including embedder metadata. Dense defaults are model-specific so runs with different `--model-name` values do not overwrite each other. To avoid overwriting reference artifacts when replaying benchmarks, use `--json-out <path>` (see `evaluation_run_log.md`).
 4. Read `evaluation_baseline_vs_psi0.md` for the scientist-style interpretation of the latest run.
 
 The fastest way to learn the system is to tweak the fixture and rerun the CLI. That gives you immediate feedback on whether the ranking rule is behaving intuitively.
@@ -146,11 +146,8 @@ If you want to test the new protocol seam rather than just the demo:
 
 ## Next Steps
 
-- Add a dense embedder implementation behind the `Embedder` protocol
-- Add richer source implementations behind `CandidateSource`
-- Add `Psi1` hooks for triggered retrieval during reasoning
-- Add post-action usefulness tracking and `Psi0`/`Psi2` calibration
-- Expand fixtures into a repeatable evaluation harness
+- Dense embedder and repeatable evaluation harness exist; current baseline is near-tie value-priority (see `evaluation_baseline_vs_psi0.md` and `evaluation_run_log.md`).
+- Possible next work: selection-policy experiments (e.g. diversity-aware packing, reserve for top-V), calibration from `Psi0` to `Psi2`, or `Psi1` hooks for triggered retrieval.
 
 ## License
 
