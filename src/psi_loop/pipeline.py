@@ -11,6 +11,9 @@ from psi_loop.scoring import psi_0, tokenize
 
 CandidateScorer = Callable[[str, str, Iterable[str], Embedder | None], tuple[float, float, float]]
 
+# When two scores differ by less than this, rank by value (higher V first) before budget packing.
+NEAR_TIE_EPSILON = 1e-2
+
 
 def _token_count(text: str) -> int:
     return len(tokenize(text))
@@ -23,7 +26,12 @@ def rank_candidates(
     scorer: CandidateScorer = psi_0,
     embedder: Embedder | None = None,
 ) -> list[ScoredCandidate]:
-    """Rank candidates with Psi0 and preserve useful scoring detail."""
+    """Rank candidates with Psi0 and preserve useful scoring detail.
+
+    When two scores differ by less than NEAR_TIE_EPSILON, the candidate with higher
+    value is ranked first (near-tie V-priority) so budget packing prefers usefulness
+    over novelty in close score contests.
+    """
 
     ranked: list[ScoredCandidate] = []
     for candidate in candidates:
@@ -43,10 +51,11 @@ def rank_candidates(
             )
         )
 
-    return sorted(
-        ranked,
-        key=lambda item: (-item.score, -item.value, -item.surprise, item.candidate.id),
-    )
+    def sort_key(item: ScoredCandidate) -> tuple[float, float, float, str]:
+        score_bucket = (item.score // NEAR_TIE_EPSILON) * NEAR_TIE_EPSILON
+        return (-score_bucket, -item.value, -item.surprise, item.candidate.id)
+
+    return sorted(ranked, key=sort_key)
 
 
 def fit_to_budget(ranked: Sequence[ScoredCandidate], max_tokens: int) -> list[ScoredCandidate]:

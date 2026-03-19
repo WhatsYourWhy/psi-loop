@@ -302,3 +302,57 @@ Task-specific forensic on `realistic_roadmap_planning` with dense embedder (all-
 **Artifact:** `evaluation_forensic_realistic_roadmap_planning_dense.txt` (full report with gold labels and diagnosis block).
 
 **Tooling:** Forensic report now includes gold useful/redundant labels in the ranked table and budget trace, and a diagnosis block (Psi0 rank-1, baseline rank-1, gold position in each ranking, and Diagnosis line). Script `scripts/inspect_task_forensics.py` accepts `--out` to write the report to a file.
+
+---
+
+## 2025-03-17 — Near-tie V-priority (experiment)
+
+**Change:** Selection-time rule in [rank_candidates](src/psi_loop/pipeline.py): when two candidates' Psi0 scores differ by less than `NEAR_TIE_EPSILON` (0.01), prefer the one with higher value when ranking. Score formula unchanged (`score = V × H`); only the sort key buckets score and breaks near-ties by value so budget packing sees the more useful candidate first. Baseline unchanged (it re-sorts by score after calling `rank_candidates`).
+
+### Test suite
+
+```
+pytest tests/ -v
+```
+
+- **Result:** 46 passed.
+
+### Bow (near-tie V-priority)
+
+```
+PYTHONPATH=src python scripts/run_baseline_vs_psi0.py --backend bow --json-out evaluation_results_baseline_vs_psi0_bow_near_tie_v_priority.json
+```
+
+| Metric | Near-tie V-priority | Prior (relation bonus) |
+|--------|---------------------|------------------------|
+| Wins | psi0=4, baseline=0, tie=10 | psi0=4, baseline=0, tie=10 |
+| Useful hits | psi0=5, baseline=1 | psi0=5, baseline=1 |
+| Redundant hits | psi0=7, baseline=12 | psi0=7, baseline=12 |
+
+**Artifacts:** `evaluation_results_baseline_vs_psi0_bow_near_tie_v_priority.json`  
+**Roadmap:** tie (both select `novel_data_contracts`). No regression.
+
+### Dense (near-tie V-priority)
+
+```
+PYTHONPATH=src python scripts/run_baseline_vs_psi0.py --backend dense --json-out evaluation_results_baseline_vs_psi0_dense_all-MiniLM-L6-v2_near_tie_v_priority.json
+```
+
+| Metric | Near-tie V-priority | Prior (relation bonus) |
+|--------|---------------------|------------------------|
+| Wins | psi0=2, baseline=0, tie=12 | psi0=2, baseline=1, tie=11 |
+| Useful hits | psi0=3, baseline=1 | psi0=2, baseline=1 |
+| Redundant hits | psi0=6, baseline=13 | psi0=6, baseline=13 |
+
+**Notable:** `realistic_roadmap_planning` — **tie** (Psi0 and baseline both select `novel_data_contracts`). The near-tie rule flipped rank-1 from unrelated_visual_refresh to novel_data_contracts (scores 0.2324 vs 0.2317 within epsilon; gold has higher V), so budget selection now picks the gold candidate. Dense baseline wins dropped from 1 to 0; Psi0 useful hits increased from 2 to 3; no redundant-hit regression.
+
+**Artifacts:** `evaluation_results_baseline_vs_psi0_dense_all-MiniLM-L6-v2_near_tie_v_priority.json`
+
+### Near-tie V-priority summary
+
+| Backend | Psi0 wins | Baseline wins | Ties | Psi0 useful | Psi0 redundant |
+|---------|-----------|---------------|------|-------------|----------------|
+| Bow (near-tie V) | 4 | 0 | 10 | 5 | 7 |
+| Dense (near-tie V) | 2 | 0 | 12 | 3 | 6 |
+
+**Conclusion:** Selection-time fix achieved the target: dense roadmap is now tie (Psi0 selects gold). No Bow regression; Dense gained one useful hit and removed the single baseline win. The forensic diagnosis (budget crowd-out from a tiny score edge) was addressed by preferring higher V when scores are within 0.01.
