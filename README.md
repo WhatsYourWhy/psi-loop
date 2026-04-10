@@ -79,6 +79,7 @@ The current package is organized around three main extension points:
 - `Embedder`: text-to-vector protocol
 - `CandidateSource`: candidate retrieval protocol
 - `PsiLoop`: thin orchestration shell that fetches candidates, scores them, and fits them to a budget
+- `build_task_forensics` / `render_task_forensics`: structured forensic view comparing `Psi0` and baseline on a single task
 
 The default install path remains zero-dependency:
 
@@ -94,7 +95,9 @@ The default install path remains zero-dependency:
 
 The package ranks candidates by `H * V` (with near-tie value-priority at selection time), then fits the result into a shared token budget. A similarity-only baseline is included for comparison so fixtures can demonstrate where goal-conditioned salience beats naive retrieval.
 
-By default, `H` is still computed through the bundled `BowEmbedder`, which preserves the current bag-of-words behavior. The scoring functions now also accept injected embedders, which is the seam intended for future dense-vector backends.
+By default, `H` is computed through the bundled `BowEmbedder`, which produces L2-normalized bag-of-words vectors so that short and long chunks contribute equally to the context centroid. The scoring functions also accept injected embedders, which is the seam intended for future dense-vector backends.
+
+Selection is **iterative by default**: after each candidate is chosen it is appended to the running context before the remaining candidates are re-scored, so already-selected content suppresses redundant subsequent picks. Pass `iterative=False` to `select_context` or `PsiLoop.select` to restore the original single-pass behaviour.
 
 In the bundled example, the baseline prefers a note that repeats the existing fixed-delay retry policy, while `Psi0` prefers the more novel note about exponential backoff with jitter.
 

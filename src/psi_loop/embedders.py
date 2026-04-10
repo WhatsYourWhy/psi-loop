@@ -20,11 +20,20 @@ class Embedder(Protocol):
 
 
 class BowEmbedder:
-    """Default embedder that preserves the current bag-of-words behavior."""
+    """Default embedder using L2-normalized bag-of-words vectors.
+
+    Normalizing to unit length removes document-length bias from centroid
+    calculations, so a 3-word chunk and a 300-word chunk contribute equally
+    to the context centroid when computing surprise scores.
+    """
 
     def embed(self, text: str) -> SparseVector:
         counts = token_counts(text)
-        return {token: float(value) for token, value in counts.items()}
+        raw = {token: float(value) for token, value in counts.items()}
+        norm = sum(v * v for v in raw.values()) ** 0.5
+        if norm == 0.0:
+            return raw
+        return {token: value / norm for token, value in raw.items()}
 
 
 class STEmbedder:
