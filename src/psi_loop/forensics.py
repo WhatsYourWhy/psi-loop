@@ -133,7 +133,13 @@ def build_task_forensics(
     embedder: Embedder | None = None,
     top_k: int = 5,
 ) -> TaskForensics:
-    """Build a structured forensic view for one task."""
+    """Build a structured forensic view for one task.
+
+    Uses iterative=False so that the budget trace (which replays selection over
+    the initial ranked list) stays consistent with the reported selected set.
+    Iterative selection interleaves scoring and selection in a way that cannot
+    be faithfully replayed by a post-hoc budget trace over a static ranking.
+    """
 
     baseline_result = select_context_baseline(
         candidates=task.candidates,
@@ -147,6 +153,7 @@ def build_task_forensics(
         current_context=task.current_context,
         max_tokens=task.max_tokens,
         embedder=embedder,
+        iterative=False,
     )
     return TaskForensics(
         task_id=task.id,

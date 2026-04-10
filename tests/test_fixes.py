@@ -22,7 +22,7 @@ from psi_loop import (
     surprise_score,
 )
 from psi_loop.embedders import centroid, cosine_similarity_vectors
-from psi_loop.pipeline import fit_to_budget, rank_candidates, select_with_scorer
+from psi_loop.pipeline import _near_tie_sort_key, fit_to_budget, rank_candidates, select_with_scorer
 from psi_loop.scoring import psi_0
 
 
@@ -310,3 +310,111 @@ class TestIterativeSelection:
         ids = [sc.candidate.id for sc in result.selected]
         # Novel should be ranked above redundant since context already covers backoff.
         assert ids[0] == "novel"
+
+
+# ---------------------------------------------------------------------------
+# Bot review fixes: near-tie key in iterative rounds + forensics consistency
+# ---------------------------------------------------------------------------
+
+class TestBotReviewFixes:
+    """Covers the two issues flagged by Codex during PR review."""
+
+    # --- Issue 1: near-tie sort key shared between rank_candidates and _select_iterative ---
+
+    def test_near_tie_sort_key_is_module_level(self):
+        """_near_tie_sort_key must be importable so both ranking paths share it."""
+        assert callable(_near_tie_sort_key)
+
+    def test_near_tie_key_buckets_score_not_raw(self):
+        """The key must bucket by NEAR_TIE_EPSILON, not sort by raw score."""
+        from psi_loop.pipeline import NEAR_TIE_EPSILON
+        from psi_loop.models import ScoredCandidate
+        # Two candidates whose scores straddle a bucket boundary by sub-epsilon.
+        # With raw-score sorting the higher-score item always wins regardless of value.
+        # With bucketed sorting they land in the same bucket and the higher-VALUE item wins.
+        low_score_high_value = ScoredCandidate(
+            candidate=make_candidate("hv", "x"), score=0.100, value=0.9, surprise=0.111, token_count=1
+        )
+        high_score_low_value = ScoredCandidate(
+            candidate=make_candidate("lv", "x"), score=0.109, value=0.1, surprise=1.0, token_count=1
+        )
+        # Both fall in the 0.10 bucket (floor(0.100/0.01)*0.01 == floor(0.109/0.01)*0.01 == 0.10).
+        assert _near_tie_sort_key(low_score_high_value) < _near_tie_sort_key(high_score_low_value), (
+            "Higher-value candidate should sort first when scores are in the same bucket"
+        )
+
+    def test_iterative_near_tie_prefers_value_over_sub_epsilon_score_jitter(self):
+        """Within an iterative round, a candidate with higher V should beat one with
+        trivially higher score when both are in the same NEAR_TIE_EPSILON bucket."""
+        # Construct a scenario where, after one pick updates context, two remaining
+        # candidates have scores in the same epsilon bucket but different values.
+        # We do this by pre-seeding context so surprise is roughly equal.
+        shared_context = ["retry backoff strategy"]
+        # Both candidates are about "retry backoff" so surprise is similar.
+        high_value = make_candidate("hv", "retry backoff idempotency queue guardrail migration")
+        low_value  = make_candidate("lv", "retry")
+        goal = "design retry strategy with backoff idempotency"
+
+        result = select_context(
+            [high_value, low_value], goal, shared_context, max_tokens=50, iterative=True
+        )
+        # high_value mentions more goal terms → higher V; it must be picked first.
+        assert result.selected[0].candidate.id == "hv"
+
+    # --- Issue 2: forensics uses iterative=False so budget trace stays coherent ---
+
+    def test_forensics_selected_matches_budget_trace(self):
+        """Every candidate marked 'selected' in the budget trace must also appear
+        in result.selected, and vice versa — i.e., no contradiction."""
+        from psi_loop.models import TaskDefinition
+        task = TaskDefinition(
+            id="coherence-check",
+            goal="design retry strategy with backoff",
+            current_context=["We use fixed delays today."],
+            max_tokens=80,
+            candidates=[
+                make_candidate("A", "Use exponential backoff with jitter on retry"),
+                make_candidate("B", "Retry with exponential backoff and add jitter between attempts"),
+                make_candidate("C", "Add a dead-letter queue for messages that exhaust retries"),
+                make_candidate("D", "Emit a metric on every retry attempt for observability"),
+            ],
+        )
+        forensics = build_task_forensics(task)
+
+        for selector in (forensics.baseline, forensics.psi0):
+            trace_selected_ids = {
+                item.candidate.candidate.id
+                for item in selector.budget_trace
+                if item.reason == "selected"
+            }
+            result_selected_ids = {sc.candidate.id for sc in selector.selected}
+            assert trace_selected_ids == result_selected_ids, (
+                f"{selector.name}: budget trace selected={trace_selected_ids} "
+                f"!= result selected={result_selected_ids}"
+            )
+
+    def test_forensics_no_candidate_selected_but_traced_dropped(self):
+        """A candidate in result.selected must never appear as 'would_exceed_budget'
+        or 'too_large' in the budget trace of the same selector."""
+        from psi_loop.models import TaskDefinition
+        task = TaskDefinition(
+            id="no-ghost-drops",
+            goal="retry backoff queue",
+            current_context=[],
+            max_tokens=60,
+            candidates=[
+                make_candidate("A", "retry backoff jitter"),
+                make_candidate("B", "dead-letter queue overflow"),
+                make_candidate("C", "idempotency key deduplication retry"),
+            ],
+        )
+        forensics = build_task_forensics(task)
+
+        for selector in (forensics.baseline, forensics.psi0):
+            selected_ids = {sc.candidate.id for sc in selector.selected}
+            for trace_item in selector.budget_trace:
+                cid = trace_item.candidate.candidate.id
+                if cid in selected_ids:
+                    assert trace_item.reason == "selected", (
+                        f"{selector.name}: {cid} is in selected but trace says {trace_item.reason}"
+                    )

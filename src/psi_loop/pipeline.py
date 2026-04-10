@@ -22,6 +22,16 @@ def _token_count(text: str) -> int:
     return len(tokenize(text))
 
 
+def _near_tie_sort_key(item: ScoredCandidate) -> tuple[float, float, float, str]:
+    """Shared sort key for both initial ranking and iterative rescoring rounds.
+
+    Buckets scores into NEAR_TIE_EPSILON-wide windows so that near-tie candidates
+    are ranked by value (higher V first) rather than by sub-epsilon score jitter.
+    """
+    score_bucket = (item.score // NEAR_TIE_EPSILON) * NEAR_TIE_EPSILON
+    return (-score_bucket, -item.value, -item.surprise, item.candidate.id)
+
+
 def rank_candidates(
     candidates: Sequence[Candidate],
     goal: str,
@@ -31,9 +41,9 @@ def rank_candidates(
 ) -> list[ScoredCandidate]:
     """Rank candidates with Psi0 and preserve useful scoring detail.
 
-    When two scores differ by less than NEAR_TIE_EPSILON, the candidate with higher
-    value is ranked first (near-tie V-priority) so budget packing prefers usefulness
-    over novelty in close score contests.
+    When two scores fall in the same NEAR_TIE_EPSILON bucket, the candidate with
+    higher value is ranked first (near-tie V-priority) so budget packing prefers
+    usefulness over novelty in close score contests.
     """
 
     ranked: list[ScoredCandidate] = []
@@ -54,11 +64,7 @@ def rank_candidates(
             )
         )
 
-    def sort_key(item: ScoredCandidate) -> tuple[float, float, float, str]:
-        score_bucket = (item.score // NEAR_TIE_EPSILON) * NEAR_TIE_EPSILON
-        return (-score_bucket, -item.value, -item.surprise, item.candidate.id)
-
-    return sorted(ranked, key=sort_key)
+    return sorted(ranked, key=_near_tie_sort_key)
 
 
 def fit_to_budget(ranked: Sequence[ScoredCandidate], max_tokens: int) -> list[ScoredCandidate]:
@@ -117,7 +123,7 @@ def _select_iterative(
                 )
             )
 
-        scored.sort(key=lambda x: (-x.score, -x.value, x.candidate.id))
+        scored.sort(key=_near_tie_sort_key)
 
         # Pick the highest-scoring candidate that fits in the remaining budget.
         picked: ScoredCandidate | None = None
