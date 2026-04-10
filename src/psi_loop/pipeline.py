@@ -138,7 +138,7 @@ def _select_iterative(
         selected.append(picked)
         tokens_used += picked.token_count
         running_context.append(picked.candidate.text)
-        remaining = [c for c in remaining if c.id != picked.candidate.id]
+        remaining = [c for c in remaining if c is not picked.candidate]
 
     return selected
 

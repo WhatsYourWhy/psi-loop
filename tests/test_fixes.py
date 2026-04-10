@@ -418,3 +418,33 @@ class TestBotReviewFixes:
                     assert trace_item.reason == "selected", (
                         f"{selector.name}: {cid} is in selected but trace says {trace_item.reason}"
                     )
+
+    # --- Issue 3 (P2): iterative remainder filtered by identity, not id ---
+
+    def test_iterative_duplicate_id_candidates_both_considered(self):
+        """Two distinct Candidate objects that share an id must both be eligible
+        for selection — only the picked object should be removed from remaining."""
+        # Create two candidates with the same id but different text/source.
+        c1 = Candidate(id="dup", text="retry backoff jitter", source="source-a")
+        c2 = Candidate(id="dup", text="dead-letter queue overflow", source="source-b")
+        goal = "retry queue resilience"
+
+        result = select_context([c1, c2], goal, [], max_tokens=200, iterative=True)
+        selected_texts = {sc.candidate.text for sc in result.selected}
+
+        # Both must have been considered — the second should appear in selected
+        # because it covers different vocabulary (queue) the first doesn't.
+        assert len(result.selected) == 2, (
+            f"Expected both candidates selected, got: {selected_texts}"
+        )
+
+    def test_iterative_unique_candidates_unaffected_by_identity_filter(self):
+        """Standard case (all unique ids) must behave identically before and after
+        the id→identity filter change."""
+        candidates = [
+            make_candidate("A", "retry backoff jitter"),
+            make_candidate("B", "dead-letter queue overflow"),
+            make_candidate("C", "idempotency key deduplication"),
+        ]
+        result = select_context(candidates, "retry queue resilience", [], max_tokens=200, iterative=True)
+        assert {sc.candidate.id for sc in result.selected} == {"A", "B", "C"}
